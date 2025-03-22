@@ -17,6 +17,8 @@ export default function RootLayout() {
         <Stack.Screen name="select-gplx" />
         <Stack.Screen name="information" />
         <Stack.Screen name="testscreen" />
+        <Stack.Screen name="signscreen" />
+        <Stack.Screen name="exam" />
         <Stack.Screen name="questionscreen" />
       </Stack>
 

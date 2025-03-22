@@ -56,6 +56,9 @@ const FeatureGrid = () => {
     if (text === "THI THỬ") {
       router.push("/testscreen"); // Đảm bảo rằng bạn có định tuyến tới TestScreen
     }
+    else if (text == "BIỂN BÁO") {
+      router.push("/signscreen");
+    }
     // Bạn có thể thêm điều kiện cho các button khác nếu cần thiết.
   };
 
@@ -110,14 +113,14 @@ const StudyTopics = () => {
     { icon: '⚠️', title: 'Biển báo đường bộ', count: 45 },
     { icon: '🛑', title: 'Sa hình', count: 38 },
   ];
-  
+
 
   return (
     <View style={styles.studyTopicsContainer}>
       <Text style={styles.studyTopicsTitle}>Ôn tập theo chủ đề</Text>
       {topics.map((topic, index) => (
-        <TouchableOpacity 
-          key={index} 
+        <TouchableOpacity
+          key={index}
           style={styles.topicCard}
           onPress={() => topic.screen && router.push(topic.screen)}
         >
