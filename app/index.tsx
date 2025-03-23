@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
+import { createTables, checkVersion} from './database/database';
+
 const Index = () => {
   const router = useRouter();
+  useEffect(() => {
+    (async () => {
+      await createTables();
+      await checkVersion();
+    })();
+  }, []);
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -110,14 +118,14 @@ const StudyTopics = () => {
     { icon: '⚠️', title: 'Biển báo đường bộ', count: 45 },
     { icon: '🛑', title: 'Sa hình', count: 38 },
   ];
-  
+
 
   return (
     <View style={styles.studyTopicsContainer}>
       <Text style={styles.studyTopicsTitle}>Ôn tập theo chủ đề</Text>
       {topics.map((topic, index) => (
-        <TouchableOpacity 
-          key={index} 
+        <TouchableOpacity
+          key={index}
           style={styles.topicCard}
           onPress={() => topic.screen && router.push(topic.screen)}
         >

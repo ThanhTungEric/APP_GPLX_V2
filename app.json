@@ -8,6 +8,10 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "API_HOST": "https://daotaolaixebd.com/app",
+      "TOKEN_GET": "C7GDHCXmgLAFVsQ9r7OUcOPH1zF1tiPlXWDZUi6O6sKpvf3Z6w4gurkOfCsgsit8"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -31,6 +35,23 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "enableFTS": true,
+          "useSQLCipher": true,
+          "android": {
+            "enableFTS": false,
+            "useSQLCipher": false
+          },
+          "ios": {
+            "customBuildFlags": [
+              "-DSQLITE_ENABLE_DBSTAT_VTAB=1",
+              "-DSQLITE_ENABLE_SNAPSHOT=1"
+            ]
+          }
         }
       ]
     ],

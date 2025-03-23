@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -6,6 +6,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 
 const InformationScreen = () => {
   const router = useRouter();
+  const [appVersion, setAppVersion] = useState<string>('');  // Initialize state to hold the version
 
   return (
     <View style={styles.container}>
@@ -62,7 +63,7 @@ const InformationScreen = () => {
         </View>
 
         {/* Phiên bản ứng dụng */}
-        <Text style={styles.versionText}>PHIÊN BẢN 2.2.4</Text>
+        <Text style={styles.versionText}>PHIÊN BẢN {appVersion || 'Đang tải...'}</Text>
       </ScrollView>
     </View>
   );
