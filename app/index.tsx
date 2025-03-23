@@ -64,6 +64,15 @@ const FeatureGrid = () => {
     if (text === "THI THỬ") {
       router.push("/testscreen"); // Đảm bảo rằng bạn có định tuyến tới TestScreen
     }
+    // else if (text == "BIỂN BÁO") {
+    //   router.push("/signscreen");
+    // }
+    // else if (text === "MẸO") {
+    //   router.push("/tipsscreen"); // Navigate to TipsScreen
+    // }
+    // else if (text === "CÂU HAY SAI") {
+    //   router.push("/frequentquestionscreen"); // Navigate to the new screen
+    // }
     // Bạn có thể thêm điều kiện cho các button khác nếu cần thiết.
   };
 

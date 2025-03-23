@@ -2,6 +2,8 @@ import React from 'react';
 import { Stack, usePathname } from "expo-router";
 import { View, StyleSheet, Platform } from "react-native";
 import BottomNavigation from "./components/BottomNavigation";
+import TipsScreen from './tipsscreen';
+import FrequentQuestionScreen from './frequentquestionscreen';
 
 export default function RootLayout() {
   const pathname = usePathname(); // Lấy đường dẫn hiện tại
@@ -17,7 +19,10 @@ export default function RootLayout() {
         <Stack.Screen name="select-gplx" />
         <Stack.Screen name="information" />
         <Stack.Screen name="testscreen" />
+        <Stack.Screen name="signscreen" />
+        <Stack.Screen name="exam" />
         <Stack.Screen name="questionscreen" />
+        <Stack.Screen name="frequentquestionscreen" />
       </Stack>
 
       {/* Kiểm tra xem màn hình hiện tại có trong danh sách ẩn không */}
