@@ -2,7 +2,9 @@ import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
-import { createTables, checkVersion} from './database/database';
+import { createTables, checkVersion } from './database/database';
+import { getAllChapters } from './database/chapter';
+import { getQuestionsByChapterId, getQuestionsInChapters } from './database/questions';
 
 const Index = () => {
   const router = useRouter();
@@ -62,17 +64,17 @@ const FeatureGrid = () => {
 
   const handleFeaturePress = (text: string) => {
     if (text === "THI THỬ") {
-      router.push("/testscreen"); // Đảm bảo rằng bạn có định tuyến tới TestScreen
+      router.push("/testscreen");
     }
-    // else if (text == "BIỂN BÁO") {
-    //   router.push("/signscreen");
-    // }
-    // else if (text === "MẸO") {
-    //   router.push("/tipsscreen"); // Navigate to TipsScreen
-    // }
-    // else if (text === "CÂU HAY SAI") {
-    //   router.push("/frequentquestionscreen"); // Navigate to the new screen
-    // }
+    else if (text == "BIỂN BÁO") {
+      router.push("/signscreen");
+    }
+    else if (text === "MẸO") {
+      router.push("/tipsscreen");
+    }
+    else if (text === "CÂU HAY SAI") {
+      router.push("/frequentquestionscreen");
+    }
     // Bạn có thể thêm điều kiện cho các button khác nếu cần thiết.
   };
 
@@ -114,42 +116,60 @@ const ProgressSection = () => (
 // Ôn tập theo chủ đề
 const StudyTopics = () => {
   const router = useRouter();
+  const [topics, setTopics] = React.useState<{ id: number; name: string; questionCount: number }[]>([]);
 
-  type ScreenPath = "/questionscreen" | "/information" | "/select-gplx";
+  React.useEffect(() => {
+    async function fetchChaptersWithQuestions() {
+      try {
+        const chapters = await getAllChapters();  // Lấy tất cả các chương
+        const questionsInChapters = await getQuestionsInChapters();  // Lấy câu hỏi theo chương
 
-  const topics: { icon: string; title: string; count: number; screen?: ScreenPath }[] = [
-    { icon: '🔥', title: 'Câu hỏi điểm liệt', count: 60, screen: "/questionscreen" },
-    { icon: '🚦', title: 'Khái niệm và quy tắc', count: 166 },
-    { icon: '🚚', title: 'Nghiệp vụ vận tải', count: 26 },
-    { icon: '👨‍💼', title: 'Văn hoá và đạo đức', count: 21 },
-    { icon: '🚗', title: 'Kỹ thuật lái xe', count: 56 },
-    { icon: '🔧', title: 'Cấu tạo và sửa chữa', count: 32 },
-    { icon: '⚠️', title: 'Biển báo đường bộ', count: 45 },
-    { icon: '🛑', title: 'Sa hình', count: 38 },
-  ];
+        console.log('Fetched chapters:', chapters);
+        console.log('Fetched questions in chapters:', questionsInChapters);
 
+        const chaptersWithCounts = chapters.map((chapter) => {
+          const chapterQuestions = questionsInChapters.find((q) => Number(q.chapterId) === Number(chapter.id));
+
+          const questionCount = chapterQuestions?.questions?.length || 0;
+
+          console.log(`Chapter ID: ${chapter.id}, Question Count: ${questionCount}`);
+
+          return { ...chapter, questionCount };
+        });
+
+        setTopics(chaptersWithCounts);
+      } catch (error) {
+        console.error('Error fetching chapters or questions:', error);
+      }
+    }
+
+    fetchChaptersWithQuestions();  // Gọi hàm để tải dữ liệu
+  }, []);
+
+
+  const handleTopicPress = (id: number, name: string) => {
+    router.push({ pathname: '/testscreen/exam', params: { id, title: name } });
+  };
 
   return (
     <View style={styles.studyTopicsContainer}>
       <Text style={styles.studyTopicsTitle}>Ôn tập theo chủ đề</Text>
-      {topics.map((topic, index) => (
+      {topics.map((topic) => (
         <TouchableOpacity
-          key={index}
+          key={topic.id}
           style={styles.topicCard}
-          onPress={() => topic.screen && router.push(topic.screen)}
+          onPress={() => handleTopicPress(topic.id, topic.name)}
         >
-          <Text style={styles.topicIcon}>{topic.icon}</Text>
+          <Text style={styles.topicIcon}>📘</Text>
           <View style={styles.topicInfo}>
-            <Text style={styles.topicTitle}>{topic.title}</Text>
-            <Text style={styles.topicCount}>{topic.count} câu hỏi</Text>
+            <Text style={styles.topicTitle}>{topic.name}</Text>
+            <Text style={styles.topicCount}>{topic.questionCount} câu hỏi</Text>
           </View>
         </TouchableOpacity>
       ))}
     </View>
   );
 };
-
-
 
 // Styles
 const styles = StyleSheet.create({
@@ -172,7 +192,7 @@ const styles = StyleSheet.create({
   topicCard: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#F4F4F4', borderRadius: 10, marginBottom: 10 },
   topicIcon: { fontSize: 24, marginRight: 10 },
   topicInfo: { flex: 1 },
-  topicTitle: { fontSize: 16, fontWeight: 'bold' },
+  topicTitle: { fontSize: 16, },
   topicCount: { fontSize: 14, color: '#666' },
 });
 

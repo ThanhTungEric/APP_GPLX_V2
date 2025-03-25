@@ -2,51 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ScrollView, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { getAllQuestions } from '../database/questions';
 
 const ExamScreen = () => {
     const router = useRouter();
     const { id, title } = useLocalSearchParams();
 
-    useEffect(() => {
-        if (id) {
-            const questionIndex = questions.findIndex((q) => q.id === Number(id));
-            if (questionIndex !== -1) {
-                setCurrentQuestionIndex(questionIndex);
-            }
-        }
-    }, [id]);
+    interface Question {
+        id: number;
+        content: string;
+        options: string;
+        correctAnswerIndex: number;
+        chapterId: number;
+        imageName?: string;
+        number: number;
+    }
 
-    const questions = [
-        {
-            id: 1,
-            question: "Câu hỏi 1: Đây là nội dung câu hỏi có hình ảnh?",
-            image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", // Đường dẫn hình ảnh
-            answers: [
-                { id: 'A', text: 'Đáp án A' },
-                { id: 'B', text: 'Đáp án B' },
-                { id: 'C', text: 'Đáp án C' },
-                { id: 'D', text: 'Đáp án D' }
-            ]
-        },
-        {
-            id: 2,
-            question: "Câu hỏi 2: Đây là nội dung câu hỏi lý thuyết không có hình ảnh?",
-            answers: [
-                { id: 'A', text: 'Đáp án A' },
-                { id: 'B', text: 'Đáp án B' },
-                { id: 'C', text: 'Đáp án C' },
-                { id: 'D', text: 'Đáp án D' }
-            ]
-        },
-        // ...existing questions...
-    ];
-
+    const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+    const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
     const [isModalVisible, setIsModalVisible] = useState(false);
 
-    const handleAnswerSelect = (questionId: number, answerId: string) => {
-        setSelectedAnswers({ ...selectedAnswers, [questionId]: answerId });
+    useEffect(() => {
+        async function fetchQuestions() {
+            try {
+                const allQuestions = await getAllQuestions();
+                const filteredQuestions = allQuestions.filter((question) => question.chapterId === Number(id));
+                console.log('Fetched questions for chapter:', filteredQuestions);
+                setQuestions(filteredQuestions);
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+            }
+        }
+        fetchQuestions();
+    }, [id]);
+
+    const handleAnswerSelect = (questionId: number, answerIndex: number) => {
+        setSelectedAnswers({ ...selectedAnswers, [questionId]: answerIndex });
     };
 
     const handleNextQuestion = () => {
@@ -70,10 +62,10 @@ const ExamScreen = () => {
     const confirmSubmit = () => {
         const results = questions.map((question) => ({
             id: question.id,
-            question: question.question,
+            question: question.content,
             selectedAnswer: selectedAnswers[question.id],
-            correctAnswer: question.answers[0].id, // Giả sử đáp án đúng luôn là đáp án đầu tiên
-            isCorrect: selectedAnswers[question.id] === question.answers[0].id,
+            correctAnswer: question.correctAnswerIndex,
+            isCorrect: selectedAnswers[question.id] === question.correctAnswerIndex,
         }));
 
         setIsModalVisible(false);
@@ -101,41 +93,48 @@ const ExamScreen = () => {
                     data={questions}
                     keyExtractor={(item) => item.id.toString()}
                     horizontal
-                    renderItem={({ item }) => (
+                    renderItem={({ item, index }) => (
                         <TouchableOpacity
                             style={[
                                 styles.questionListButton,
-                                currentQuestionIndex === item.id - 1 && styles.activeQuestionListButton
+                                currentQuestionIndex === index && styles.activeQuestionListButton
                             ]}
-                            onPress={() => setCurrentQuestionIndex(item.id - 1)}
+                            onPress={() => setCurrentQuestionIndex(index)}
                         >
-                            <Text style={styles.questionListButtonText}>{item.id}</Text>
+                            <Text style={styles.questionListButtonText}>{item.number}</Text>
                         </TouchableOpacity>
                     )}
+                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No questions available</Text>} // Handle empty list
                 />
             </View>
 
             {/* Question */}
-            <View style={styles.questionContainer}>
-                <ScrollView style={styles.questionScroll} contentContainerStyle={styles.questionScrollContent}>
-                    <Text style={styles.questionText}>{currentQuestion.question}</Text>
-                    {currentQuestion.image && (
-                        <Image source={{ uri: currentQuestion.image }} style={styles.questionImage} />
-                    )}
-                </ScrollView>
-                {currentQuestion.answers.map((answer) => (
-                    <TouchableOpacity
-                        key={answer.id}
-                        style={[
-                            styles.answerButton,
-                            selectedAnswers[currentQuestion.id] === answer.id && styles.selectedAnswerButton
-                        ]}
-                        onPress={() => handleAnswerSelect(currentQuestion.id, answer.id)}
-                    >
-                        <Text style={styles.answerText}>{answer.text}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+            {currentQuestion && (
+                <View style={styles.questionContainer}>
+                    <ScrollView style={styles.questionScroll} contentContainerStyle={styles.questionScrollContent}>
+                        <Text style={styles.questionText}>{currentQuestion.content}</Text>
+                        {currentQuestion.imageName && (
+                            <Image
+                                source={{ uri: `https://your-image-server.com/${currentQuestion.imageName}` }}
+                                style={styles.questionImage}
+                            />
+                        )}
+                    </ScrollView>
+                    {JSON.parse(currentQuestion.options).map((option: string, index: number) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={[
+                                styles.answerButton,
+                                selectedAnswers[currentQuestion.id] === index && styles.selectedAnswerButton
+                            ]}
+                            onPress={() => handleAnswerSelect(currentQuestion.id, index)}
+                        >
+                            <Text style={styles.answerText}>{option}</Text>
+                        </TouchableOpacity>
+                    ))}
+
+                </View>
+            )}
 
             {/* Navigation */}
             <View style={styles.navigationContainer}>
@@ -165,7 +164,6 @@ const ExamScreen = () => {
                 </TouchableOpacity>
             </View>
 
-
             {/* Modal for Confirmation */}
             <Modal visible={isModalVisible} transparent animationType="slide">
                 <View style={styles.modalContainer}>
@@ -176,19 +174,20 @@ const ExamScreen = () => {
                         <FlatList
                             data={questions}
                             keyExtractor={(item) => item.id.toString()}
-                            numColumns={3}
-                            renderItem={({ item }) => (
-                                <View style={styles.modalItem}>
-                                    <Text style={styles.modalQuestion}>
-                                        {item.id}. {item.question}
-                                    </Text>
-                                    <Text style={styles.modalAnswer}>
-                                        Đáp án: {selectedAnswers[item.id] || 'Chưa chọn'}
-                                    </Text>
-                                </View>
+                            numColumns={3} // Xem thử cách hiển thị theo dạng lưới
+                            renderItem={({ item, index }) => (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.questionListButton,
+                                        currentQuestionIndex === index && styles.activeQuestionListButton
+                                    ]}
+                                    onPress={() => setCurrentQuestionIndex(index)}
+                                >
+                                    <Text style={styles.questionListButtonText}>{item.number}</Text>
+                                </TouchableOpacity>
                             )}
-                            contentContainerStyle={styles.modalList}
                         />
+
 
                         {/* Actions */}
                         <View style={styles.modalActions}>
