@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Animated 
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+import {setGradingMode, getGradingMode} from "./database/history";
 
 const SettingsScreen = () => {
     const router = useRouter();

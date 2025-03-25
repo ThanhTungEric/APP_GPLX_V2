@@ -242,19 +242,9 @@ const styles = StyleSheet.create({
     modalButton: { backgroundColor: '#007AFF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
     modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
-    questionImage: {
-        width: '100%',
-        height: 200,
-        resizeMode: 'contain',
-        marginBottom: 15,
-    },
-    questionScroll: {
-        maxHeight: 320,
-        marginBottom: 15,
-    },
-    questionScrollContent: {
-        paddingBottom: 10,
-    },
+    questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 15, },
+    questionScroll: { maxHeight: 320, marginBottom: 15, },
+    questionScrollContent: { paddingBottom: 10, },
 });
 
 export default ExamScreen;

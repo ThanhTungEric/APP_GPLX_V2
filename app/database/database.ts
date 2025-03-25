@@ -36,25 +36,25 @@ export async function createTables() {
     );
 
     CREATE TABLE IF NOT EXISTS history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       key TEXT,
       value TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS chapters (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       name TEXT UNIQUE
     );
 
     CREATE TABLE IF NOT EXISTS licenses (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       name TEXT UNIQUE,
       description TEXT
     );
 
     CREATE TABLE IF NOT EXISTS questions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       content TEXT,
       options TEXT,
       correctAnswerIndex INTEGER,
@@ -65,8 +65,16 @@ export async function createTables() {
       FOREIGN KEY (chapterId) REFERENCES chapters(id)
     );
 
+    CREATE TABLE IF NOT EXISTS question_licenses (
+      questionId INTEGER,
+      licenseId INTEGER,
+      FOREIGN KEY (questionId) REFERENCES questions(id),
+      FOREIGN KEY (licenseId) REFERENCES licenses(id),
+      PRIMARY KEY (questionId, licenseId)
+    );
+
     CREATE TABLE IF NOT EXISTS quizzes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       name TEXT UNIQUE,
       licenseId INTEGER,
       FOREIGN KEY (licenseId) REFERENCES licenses(id)
@@ -114,6 +122,7 @@ export async function updateDataFromAPI(newVersion: string) {
       await db.runAsync('DELETE FROM licenses');
       await db.runAsync('DELETE FROM questions');
       await db.runAsync('DELETE FROM quizzes');
+      await db.runAsync('DELETE FROM question_licenses');
 
       // Thêm mới
       for (const chapter of chaptersRes.data) {
@@ -123,6 +132,7 @@ export async function updateDataFromAPI(newVersion: string) {
       for (const license of licensesRes.data) {
         await db.runAsync(
           'INSERT INTO licenses (name, description) VALUES (?, ?)',
+          license.id,
           license.name,
           license.description
         );
@@ -132,19 +142,30 @@ export async function updateDataFromAPI(newVersion: string) {
         await db.runAsync(
           `INSERT INTO questions (content, options, correctAnswerIndex, isCritical, number, imageName, chapterId)
           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          q.id,
           q.content,
           JSON.stringify(q.options),
           q.correctAnswerIndex,
           q.isCritical,
           q.number,
           q.imageName,
-          q.chapterId
+          q.chapter.id
         );
+
+
+        for (const license of q.licenses) {
+          await db.runAsync(
+            'INSERT INTO question_licenses (questionId, licenseId) VALUES (?, ?)',
+            q.id,
+            license.id
+          );
+        }
       }
 
       for (const quiz of quizzesRes.data) {
         await db.runAsync(
           'INSERT INTO quizzes (name, licenseId) VALUES (?, ?)',
+          quiz.id,
           quiz.name,
           quiz.licenseId
         );

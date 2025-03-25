@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
 import { createTables, checkVersion } from './database/database';
 import { getAllChapters } from './database/chapter';
-import { getQuestionsByChapterId, getQuestionsInChapters } from './database/questions';
+import { getQuestionCountsByChapter } from './database/questions';
 
 const Index = () => {
   const router = useRouter();
@@ -121,20 +121,14 @@ const StudyTopics = () => {
   React.useEffect(() => {
     async function fetchChaptersWithQuestions() {
       try {
-        const chapters = await getAllChapters();  // Lấy tất cả các chương
-        const questionsInChapters = await getQuestionsInChapters();  // Lấy câu hỏi theo chương
-
-        console.log('Fetched chapters:', chapters);
-        console.log('Fetched questions in chapters:', questionsInChapters);
+        const chapters = await getAllChapters();
+        const questionCounts = await getQuestionCountsByChapter();
+        console.log('---->', chapters)
+        console.log('----------> ', questionCounts)
 
         const chaptersWithCounts = chapters.map((chapter) => {
-          const chapterQuestions = questionsInChapters.find((q) => Number(q.chapterId) === Number(chapter.id));
-
-          const questionCount = chapterQuestions?.questions?.length || 0;
-
-          console.log(`Chapter ID: ${chapter.id}, Question Count: ${questionCount}`);
-
-          return { ...chapter, questionCount };
+          const countData = questionCounts.find((q) => q.chapterId === chapter.id);
+          return { ...chapter, questionCount: countData?.questionCount || 0 };
         });
 
         setTopics(chaptersWithCounts);
@@ -142,10 +136,8 @@ const StudyTopics = () => {
         console.error('Error fetching chapters or questions:', error);
       }
     }
-
-    fetchChaptersWithQuestions();  // Gọi hàm để tải dữ liệu
+    fetchChaptersWithQuestions();
   }, []);
-
 
   const handleTopicPress = (id: number, name: string) => {
     router.push({ pathname: '/testscreen/exam', params: { id, title: name } });
