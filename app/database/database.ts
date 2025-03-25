@@ -103,6 +103,33 @@ export async function checkVersion() {
   }
 }
 
+// get version lastest
+export async function getVersion() {
+  const db = await openDatabase();
+  const result = await db.getFirstAsync<{ version: string }>(
+    'SELECT version FROM version ORDER BY createdAt DESC LIMIT 1'
+  );
+  console.log('🔍 Phiên bản hiện tại:', result?.version);
+  return result?.version || null;
+}
+
+//reset database drop all tables
+export async function resetDatabase() {
+  const db = await openDatabase();
+  await db.execAsync(`
+    DROP TABLE IF EXISTS history;
+    DROP TABLE IF EXISTS chapters;
+    DROP TABLE IF EXISTS licenses;
+    DROP TABLE IF EXISTS questions;
+    DROP TABLE IF EXISTS question_licenses;
+    DROP TABLE IF EXISTS quizzes;
+  `);
+  console.log('🗑️ Đã xóa tất cả dữ liệu!');
+  await createTables();
+  console.log('📦 Đã tạo lại bảng dữ liệu!');
+  await checkVersion();
+  console.log('🔍 Đã kiểm tra phiên bản!');
+}
 
 // Cập nhật dữ liệu
 export async function updateDataFromAPI(newVersion: string) {
@@ -126,7 +153,7 @@ export async function updateDataFromAPI(newVersion: string) {
 
       // Thêm mới
       for (const chapter of chaptersRes.data) {
-        await db.runAsync('INSERT INTO chapters (name) VALUES (?)', chapter.name);
+        await db.runAsync('INSERT INTO chapters (id, name) VALUES (?, ?)', chapter.id, chapter.name);
       }
 
       for (const license of licensesRes.data) {
@@ -140,8 +167,8 @@ export async function updateDataFromAPI(newVersion: string) {
 
       for (const q of questionsRes.data) {
         await db.runAsync(
-          `INSERT INTO questions (content, options, correctAnswerIndex, isCritical, number, imageName, chapterId)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO questions (id, content, options, correctAnswerIndex, isCritical, number, imageName, chapterId)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           q.id,
           q.content,
           JSON.stringify(q.options),
@@ -164,7 +191,7 @@ export async function updateDataFromAPI(newVersion: string) {
 
       for (const quiz of quizzesRes.data) {
         await db.runAsync(
-          'INSERT INTO quizzes (name, licenseId) VALUES (?, ?)',
+          'INSERT INTO quizzes (id, name, licenseId) VALUES (?, ?, ?)',
           quiz.id,
           quiz.name,
           quiz.licenseId

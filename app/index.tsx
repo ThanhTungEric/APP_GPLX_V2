@@ -2,16 +2,18 @@ import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
-import { createTables, checkVersion } from './database/database';
+import { createTables, checkVersion, getVersion } from './database/database';
 import { getAllChapters } from './database/chapter';
 import { getQuestionCountsByChapter } from './database/questions';
 
 const Index = () => {
+
   const router = useRouter();
   useEffect(() => {
     (async () => {
       await createTables();
       await checkVersion();
+      await getVersion();
     })();
   }, []);
   return (
@@ -51,6 +53,8 @@ const Header = ({ router }: { router: ReturnType<typeof useRouter> }) => (
 // Banner Nâng Cấp Pro
 const UpgradeBanner = () => (
   <View style={styles.upgradeBanner}>
+    <Text style={styles.upgradeText}>Phiên bản Pro - 30% OFF</Text>
+    versionTest
     <Text style={styles.upgradeText}>Phiên bản Pro - 30% OFF</Text>
     <TouchableOpacity style={styles.upgradeButton}>
       <Text style={styles.upgradeButtonText}>Nâng cấp</Text>
@@ -123,8 +127,8 @@ const StudyTopics = () => {
       try {
         const chapters = await getAllChapters();
         const questionCounts = await getQuestionCountsByChapter();
-        console.log('---->', chapters)
-        console.log('----------> ', questionCounts)
+          console.log('---->', chapters)
+          console.log('----------> ', questionCounts)
 
         const chaptersWithCounts = chapters.map((chapter) => {
           const countData = questionCounts.find((q) => q.chapterId === chapter.id);
@@ -146,9 +150,9 @@ const StudyTopics = () => {
   return (
     <View style={styles.studyTopicsContainer}>
       <Text style={styles.studyTopicsTitle}>Ôn tập theo chủ đề</Text>
-      {topics.map((topic) => (
+      {topics.map((topic, index) => (
         <TouchableOpacity
-          key={topic.id}
+          key={topic.id || index} // Sử dụng index nếu id không hợp lệ
           style={styles.topicCard}
           onPress={() => handleTopicPress(topic.id, topic.name)}
         >
@@ -159,6 +163,7 @@ const StudyTopics = () => {
           </View>
         </TouchableOpacity>
       ))}
+
     </View>
   );
 };

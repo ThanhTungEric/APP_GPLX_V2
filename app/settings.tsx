@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import {setGradingMode, getGradingMode} from "./database/history";
+import {resetDatabase} from "./database/database";
 
 const SettingsScreen = () => {
     const router = useRouter();
@@ -26,6 +27,11 @@ const SettingsScreen = () => {
 
     // Save grading mode to database
     setGradingMode(selectedMode);
+
+    // Reset database
+    const handleResetDatabase = async () => {
+        await resetDatabase();
+    };
 
     return (
         <View style={styles.container}>
@@ -79,7 +85,7 @@ const SettingsScreen = () => {
                     </View>
 
                     <Text style={styles.sectionTitle}>DỮ LIỆU</Text>
-                    <TouchableOpacity style={styles.deleteButton}>
+                    <TouchableOpacity style={styles.deleteButton} onPress={handleResetDatabase}>
                         <Icon name="trash" size={20} color="#fff" />
                         <Text style={styles.deleteText}>Xóa dữ liệu lịch sử</Text>
                     </TouchableOpacity>
