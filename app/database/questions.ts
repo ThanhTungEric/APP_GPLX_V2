@@ -36,5 +36,21 @@ export async function getAllQuestions(): Promise<Question[]> {
 export async function getQuestionById(id: number): Promise<Question | null> {
   const db = await openDatabase();
   return db.getFirstAsync<Question>('SELECT * FROM questions WHERE id = ?', id);
+}
 
+export async function getQuestionsByChapter(chapterId: number): Promise<Question[]> {
+  const db = await openDatabase();
+  return db.getAllAsync<Question>(
+    'SELECT * FROM questions WHERE chapterId = ?',
+    chapterId
+  );
+}
+
+export async function getQuestionCountsByChapter(): Promise<{ chapterId: number; questionCount: number }[]> {
+  const db = await openDatabase();
+  return db.getAllAsync<{ chapterId: number; questionCount: number }>(
+    `SELECT chapterId, COUNT(*) as questionCount
+     FROM questions
+     GROUP BY chapterId`
+  );
 }
