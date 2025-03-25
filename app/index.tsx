@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
 import { createTables, checkVersion} from './database/database';
+import {resetHistory} from './database/history';
 
 const Index = () => {
   const router = useRouter();

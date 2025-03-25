@@ -65,6 +65,14 @@ export async function createTables() {
       FOREIGN KEY (chapterId) REFERENCES chapters(id)
     );
 
+    CREATE TABLE IF NOT EXISTS question_licenses (
+      questionId INTEGER,
+      licenseId INTEGER,
+      FOREIGN KEY (questionId) REFERENCES questions(id),
+      FOREIGN KEY (licenseId) REFERENCES licenses(id),
+      PRIMARY KEY (questionId, licenseId)
+    );
+
     CREATE TABLE IF NOT EXISTS quizzes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE,
@@ -114,6 +122,7 @@ export async function updateDataFromAPI(newVersion: string) {
       await db.runAsync('DELETE FROM licenses');
       await db.runAsync('DELETE FROM questions');
       await db.runAsync('DELETE FROM quizzes');
+      await db.runAsync('DELETE FROM question_licenses');
 
       // Thêm mới
       for (const chapter of chaptersRes.data) {
@@ -138,8 +147,17 @@ export async function updateDataFromAPI(newVersion: string) {
           q.isCritical,
           q.number,
           q.imageName,
-          q.chapterId
+          q.chapter.id
         );
+
+
+        for (const license of q.licenses) {
+          await db.runAsync(
+            'INSERT INTO question_licenses (questionId, licenseId) VALUES (?, ?)',
+            q.id,
+            license.id
+          );
+        }
       }
 
       for (const quiz of quizzesRes.data) {
