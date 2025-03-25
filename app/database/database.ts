@@ -36,25 +36,25 @@ export async function createTables() {
     );
 
     CREATE TABLE IF NOT EXISTS history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       key TEXT,
       value TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS chapters (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       name TEXT UNIQUE
     );
 
     CREATE TABLE IF NOT EXISTS licenses (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       name TEXT UNIQUE,
       description TEXT
     );
 
     CREATE TABLE IF NOT EXISTS questions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       content TEXT,
       options TEXT,
       correctAnswerIndex INTEGER,
@@ -74,7 +74,7 @@ export async function createTables() {
     );
 
     CREATE TABLE IF NOT EXISTS quizzes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER,
       name TEXT UNIQUE,
       licenseId INTEGER,
       FOREIGN KEY (licenseId) REFERENCES licenses(id)
@@ -132,6 +132,7 @@ export async function updateDataFromAPI(newVersion: string) {
       for (const license of licensesRes.data) {
         await db.runAsync(
           'INSERT INTO licenses (name, description) VALUES (?, ?)',
+          license.id,
           license.name,
           license.description
         );
@@ -141,6 +142,7 @@ export async function updateDataFromAPI(newVersion: string) {
         await db.runAsync(
           `INSERT INTO questions (content, options, correctAnswerIndex, isCritical, number, imageName, chapterId)
           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          q.id,
           q.content,
           JSON.stringify(q.options),
           q.correctAnswerIndex,
@@ -163,6 +165,7 @@ export async function updateDataFromAPI(newVersion: string) {
       for (const quiz of quizzesRes.data) {
         await db.runAsync(
           'INSERT INTO quizzes (name, licenseId) VALUES (?, ?)',
+          quiz.id,
           quiz.name,
           quiz.licenseId
         );

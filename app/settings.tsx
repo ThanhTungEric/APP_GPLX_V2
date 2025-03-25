@@ -8,7 +8,7 @@ import {setGradingMode, getGradingMode} from "./database/history";
 const SettingsScreen = () => {
     const router = useRouter();
     const [isVibrationEnabled, setVibrationEnabled] = useState(true);
-    const [selectedMode, setSelectedMode] = useState("Sau khi nộp bài");
+    const [selectedMode, setSelectedMode] = useState("after_submit");
     const [selectedTheme, setSelectedTheme] = useState("Tự động");
 
     const themes = ["Tự động", "Sáng", "Tối"];
@@ -23,6 +23,9 @@ const SettingsScreen = () => {
             useNativeDriver: false,
         }).start();
     };
+
+    // Save grading mode to database
+    setGradingMode(selectedMode);
 
     return (
         <View style={styles.container}>
