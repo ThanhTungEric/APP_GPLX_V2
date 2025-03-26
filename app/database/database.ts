@@ -86,15 +86,15 @@ export async function createTables() {
 export async function checkVersion() {
   const db = await openDatabase();
   const result = await db.getFirstAsync<{ version: string }>(
-    'SELECT version FROM version ORDER BY createdAt DESC LIMIT 1'
+    'SELECT version FROM version ORDER BY id DESC LIMIT 1'
   );
   const versionInDB = result?.version || null;
   try {
-    const fullURL = API.defaults.baseURL + 'versions/lastest';
     const response = await API.get('versions/lastest');
+    console.log('🔍 Phiên bản mới nhất ở server:', response.data.version);
     const newVersion = response.data.version;
     if (newVersion !== versionInDB) {
-      await updateDataFromAPI(newVersion);
+      await updateDataFromAPI();
     } else {
       console.log('👍 Dữ liệu đã là mới nhất!');
     }
@@ -106,12 +106,14 @@ export async function checkVersion() {
 // get version lastest
 export async function getVersion() {
   const db = await openDatabase();
-  const result = await db.getFirstAsync<{ version: string }>(
-    'SELECT version FROM version ORDER BY createdAt DESC LIMIT 1'
+  // Lấy phiên bản gần nhất
+  const result = await db.getFirstAsync<{ id: number, version: string, createdAt: string, updatedAt: string }>(
+    'SELECT * FROM version ORDER BY id DESC LIMIT 1'
   );
-  console.log('🔍 Phiên bản hiện tại:', result?.version);
-  return result?.version || null;
+  console.log('📦 Phiên bản:', result);
+  return result;
 }
+
 
 //reset database drop all tables
 export async function resetDatabase() {
@@ -123,24 +125,25 @@ export async function resetDatabase() {
     DROP TABLE IF EXISTS questions;
     DROP TABLE IF EXISTS question_licenses;
     DROP TABLE IF EXISTS quizzes;
+    DROP TABLE IF EXISTS version;
   `);
   console.log('🗑️ Đã xóa tất cả dữ liệu!');
   await createTables();
   console.log('📦 Đã tạo lại bảng dữ liệu!');
-  await checkVersion();
-  console.log('🔍 Đã kiểm tra phiên bản!');
+  await updateDataFromAPI();
 }
 
 // Cập nhật dữ liệu
-export async function updateDataFromAPI(newVersion: string) {
+export async function updateDataFromAPI() {
   const db = await openDatabase();
 
   try {
-    const [chaptersRes, licensesRes, questionsRes, quizzesRes] = await Promise.all([
+    const [chaptersRes, licensesRes, questionsRes, quizzesRes, versionsRes] = await Promise.all([
       API.get('/chapters'),
       API.get('/licenses'),
       API.get('/questions'),
       API.get('/quizzes'),
+      API.get('/versions')
     ]);
 
     await db.withTransactionAsync(async () => {
@@ -150,6 +153,7 @@ export async function updateDataFromAPI(newVersion: string) {
       await db.runAsync('DELETE FROM questions');
       await db.runAsync('DELETE FROM quizzes');
       await db.runAsync('DELETE FROM question_licenses');
+      await db.runAsync('DELETE FROM version');
 
       // Thêm mới
       for (const chapter of chaptersRes.data) {
@@ -198,7 +202,10 @@ export async function updateDataFromAPI(newVersion: string) {
         );
       }
 
-      await db.runAsync('INSERT INTO version (version) VALUES (?)', newVersion);
+      for (const version of versionsRes.data) {
+        await db.runAsync('INSERT INTO version (version) VALUES (?)', version.version);
+      }
+      console.log('🔄 Đã cập nhật dữ liệu từ API!');
     });
   } catch (error) {
     console.error('Lỗi khi cập nhật dữ liệu từ API:', error);

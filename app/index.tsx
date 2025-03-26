@@ -54,8 +54,6 @@ const Header = ({ router }: { router: ReturnType<typeof useRouter> }) => (
 const UpgradeBanner = () => (
   <View style={styles.upgradeBanner}>
     <Text style={styles.upgradeText}>Phiên bản Pro - 30% OFF</Text>
-    versionTest
-    <Text style={styles.upgradeText}>Phiên bản Pro - 30% OFF</Text>
     <TouchableOpacity style={styles.upgradeButton}>
       <Text style={styles.upgradeButtonText}>Nâng cấp</Text>
     </TouchableOpacity>
