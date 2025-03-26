@@ -127,8 +127,8 @@ const StudyTopics = () => {
       try {
         const chapters = await getAllChapters();
         const questionCounts = await getQuestionCountsByChapter();
-          console.log('---->', chapters)
-          console.log('----------> ', questionCounts)
+        console.log('---->', chapters)
+        console.log('----------> ', questionCounts)
 
         const chaptersWithCounts = chapters.map((chapter) => {
           const countData = questionCounts.find((q) => q.chapterId === chapter.id);
@@ -144,7 +144,7 @@ const StudyTopics = () => {
   }, []);
 
   const handleTopicPress = (id: number, name: string) => {
-    router.push({ pathname: '/testscreen/exam', params: { id, title: name } });
+    router.push({ pathname: '/studyscreen', params: { id, title: name } });
   };
 
   return (
@@ -152,7 +152,7 @@ const StudyTopics = () => {
       <Text style={styles.studyTopicsTitle}>Ôn tập theo chủ đề</Text>
       {topics.map((topic, index) => (
         <TouchableOpacity
-          key={topic.id || index} // Sử dụng index nếu id không hợp lệ
+          key={topic.id || index}
           style={styles.topicCard}
           onPress={() => handleTopicPress(topic.id, topic.name)}
         >

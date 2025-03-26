@@ -115,7 +115,7 @@ const ExamScreen = () => {
                         <Text style={styles.questionText}>{currentQuestion.content}</Text>
                         {currentQuestion.imageName && (
                             <Image
-                                source={{ uri: `https://your-image-server.com/${currentQuestion.imageName}` }}
+                                source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }}
                                 style={styles.questionImage}
                             />
                         )}
