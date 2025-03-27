@@ -79,6 +79,14 @@ export async function createTables() {
       licenseId INTEGER,
       FOREIGN KEY (licenseId) REFERENCES licenses(id)
     );
+
+    CREATE TABLE IF NOT EXISTS quiz_questions (
+      quizId INTEGER,
+      questionId INTEGER,
+      FOREIGN KEY (quizId) REFERENCES quizzes(id),
+      FOREIGN KEY (questionId) REFERENCES questions(id),
+      PRIMARY KEY (quizId, questionId)
+    );
   `);
 }
 
@@ -198,8 +206,15 @@ export async function updateDataFromAPI() {
           'INSERT INTO quizzes (id, name, licenseId) VALUES (?, ?, ?)',
           quiz.id,
           quiz.name,
-          quiz.licenseId
+          quiz.license.id
         );
+        for (const question of quiz.questions) {
+          await db.runAsync(
+            'INSERT INTO quiz_questions (quizId, questionId) VALUES (?, ?)',
+            quiz.id,
+            question.id
+          );
+        }
       }
 
       for (const version of versionsRes.data) {
