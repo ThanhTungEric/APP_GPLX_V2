@@ -25,9 +25,31 @@ const SignScreen = () => {
                 image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png",
                 text: "Biển báo cấm các phương tiện đi vào theo hướng ngược chiều, thường đặt ở đầu đường một chiều."
             },
+            { id: 2, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+            { id: 3, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+            { id: 4, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+            { id: 5, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+            { id: 6, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+            { id: 7, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+            { id: 8, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+            { id: 9, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" },
+
+        ],
+        [
+            {
+                id: 1,
+                title: "Cấm đi ngược chiều",
+                image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png",
+                text: "Biển báo cấm các phương tiện đi vào theo hướng ngược chiều, thường đặt ở đầu đường một chiều."
+            },
             { id: 2, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" }
         ],
 
+        [], // Placeholder for "Biển Báo Hiệu Lệnh"
+        [], // Placeholder for "Biển Báo Chỉ Dẫn"
+        [], // Placeholder for "Biển Báo Phụ"
+        [], // Placeholder for "Vạch Kẻ Đường"
+        [], // Placeholder for "Biển Báo Tốc Độ"
     ];
 
     const handleCardPress = (item: { id: number; image: string; text: string, title: string }) => {
@@ -59,7 +81,7 @@ const SignScreen = () => {
 
             {/* Tab Content */}
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {tabContent[activeTab].map((item, index) => (
+                {tabContent[activeTab]?.map((item, index) => (
                     <TouchableOpacity key={index} style={styles.card} onPress={() => handleCardPress(item)}>
                         <View>
                             <Image source={{ uri: item.image }} style={styles.cardImage} />
@@ -70,11 +92,12 @@ const SignScreen = () => {
                             <Text style={styles.cardText}>
                                 {item.title ? (item.text.length > 25 ? item.text.substring(0, 25) + "..." : item.text) : "Không có tiêu đề"}
                             </Text>
-
-
                         </View>
                     </TouchableOpacity>
                 ))}
+                {tabContent[activeTab]?.length === 0 && (
+                    <Text style={styles.emptyMessage}>Không có nội dung cho tab này.</Text>
+                )}
             </ScrollView>
         </View>
     );
@@ -143,8 +166,8 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#333',
         textAlign: 'left'
-    }
-
+    },
+    emptyMessage: { textAlign: 'center', color: '#666', marginTop: 20 }
 });
 
 export default SignScreen;

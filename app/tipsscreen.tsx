@@ -25,7 +25,7 @@ const TipsScreen = () => {
                 <View style={{ width: 22 }} />
             </View>
 
-            <ScrollView>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
                 {tips.map((tip, index) => (
                     <View key={index} style={styles.tipContainer}>
                         <Text style={styles.tipTitle}>{`${index + 1}. ${tip.title}`}</Text>
@@ -43,9 +43,10 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA', padding: 15 },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, marginBottom: 10 },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-    tipContainer: { marginBottom: 30 },
-    tipTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5, },
-    tipCard: { backgroundColor: '#fff', padding: 15, borderRadius: 10 },
+    scrollContainer: { paddingBottom: 20 },
+    tipContainer: { marginBottom: 20 },
+    tipTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: '#007AFF' },
+    tipCard: { backgroundColor: '#fff', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#007AFF', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
     tipContent: { fontSize: 16, color: '#333' },
 });
 
