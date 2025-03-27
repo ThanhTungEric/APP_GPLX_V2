@@ -161,6 +161,7 @@ export async function updateDataFromAPI() {
       await db.runAsync('DELETE FROM questions');
       await db.runAsync('DELETE FROM quizzes');
       await db.runAsync('DELETE FROM question_licenses');
+      await db.runAsync('DELETE FROM quiz_questions');
       await db.runAsync('DELETE FROM version');
 
       // Thêm mới
@@ -170,7 +171,7 @@ export async function updateDataFromAPI() {
 
       for (const license of licensesRes.data) {
         await db.runAsync(
-          'INSERT INTO licenses (name, description) VALUES (?, ?)',
+          'INSERT INTO licenses (id ,name, description) VALUES (?, ?, ?)',
           license.id,
           license.name,
           license.description

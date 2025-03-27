@@ -1,4 +1,5 @@
 import { openDatabase } from './database';
+import {getLicenseIdByName} from './licenses';
 
 export interface License {
     id: number;
@@ -44,6 +45,19 @@ export async function getCurrentLicense(): Promise<string | null> {
     return result?.value ?? null;
 }
 
+// get current license return id
+export async function getCurrentLicenseId(): Promise<number | null> {
+    const db = await openDatabase();
+    const key = 'current_license';
+    const result = await db.getFirstAsync<{ value: string }>(
+        'SELECT value FROM history WHERE key = ?',
+        key
+    );
+
+    if (!result) return null;
+
+    return await getLicenseIdByName(result.value);
+}
 // create key grading_mode
 export async function setGradingMode(value: string): Promise<void> {
     const db = await openDatabase();
