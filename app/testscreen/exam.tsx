@@ -53,8 +53,6 @@ const ExamScreen = () => {
         }
     };
 
-    const isAllAnswered = Object.keys(selectedAnswers).length === questions.length;
-
     const handleSubmit = () => {
         setIsModalVisible(true);
     };
@@ -88,7 +86,7 @@ const ExamScreen = () => {
             </View>
 
             {/* Question List */}
-            <View style={styles.questionListContainer}>
+            {/* <View style={styles.questionListContainer}>
                 <FlatList
                     data={questions}
                     keyExtractor={(item) => item.id.toString()}
@@ -106,7 +104,7 @@ const ExamScreen = () => {
                     )}
                     ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No questions available</Text>} // Handle empty list
                 />
-            </View>
+            </View> */}
 
             {/* Question */}
             {currentQuestion && (
@@ -115,7 +113,7 @@ const ExamScreen = () => {
                         <Text style={styles.questionText}>{currentQuestion.content}</Text>
                         {currentQuestion.imageName && (
                             <Image
-                                source={{ uri: `https://your-image-server.com/${currentQuestion.imageName}` }}
+                                source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }}
                                 style={styles.questionImage}
                             />
                         )}
@@ -146,9 +144,8 @@ const ExamScreen = () => {
                     <Text style={styles.navButtonText}>Câu Trước</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.submitButton, !isAllAnswered && styles.disabledSubmitButton]}
+                    style={styles.submitButton}
                     onPress={handleSubmit}
-                    disabled={!isAllAnswered}
                 >
                     <Text style={styles.submitButtonText}>Nộp Bài</Text>
                 </TouchableOpacity>
@@ -169,27 +166,20 @@ const ExamScreen = () => {
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Xác Nhận Nộp Bài</Text>
-
-                        {/* FlatList with 3 columns */}
                         <FlatList
                             data={questions}
                             keyExtractor={(item) => item.id.toString()}
-                            numColumns={3} // Xem thử cách hiển thị theo dạng lưới
-                            renderItem={({ item, index }) => (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.questionListButton,
-                                        currentQuestionIndex === index && styles.activeQuestionListButton
-                                    ]}
-                                    onPress={() => setCurrentQuestionIndex(index)}
-                                >
-                                    <Text style={styles.questionListButtonText}>{item.number}</Text>
-                                </TouchableOpacity>
+                            renderItem={({ item }) => (
+                                <View style={styles.modalQuestionContainer}>
+                                    <Text style={styles.modalQuestionText}>{item.number}. {item.content}</Text>
+                                    <Text style={styles.modalAnswerText}>
+                                        Đáp án của bạn: {selectedAnswers[item.id] !== undefined
+                                            ? JSON.parse(item.options)[selectedAnswers[item.id]]
+                                            : 'Chưa chọn'}
+                                    </Text>
+                                </View>
                             )}
                         />
-
-
-                        {/* Actions */}
                         <View style={styles.modalActions}>
                             <TouchableOpacity
                                 style={styles.modalButton}
@@ -245,6 +235,16 @@ const styles = StyleSheet.create({
     questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 15, },
     questionScroll: { maxHeight: 320, marginBottom: 15, },
     questionScrollContent: { paddingBottom: 10, },
+    modalQuestionContainer: {
+        marginBottom: 15,
+        padding: 10,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    modalQuestionText: { fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
+    modalAnswerText: { fontSize: 14, color: '#333' },
 });
 
 export default ExamScreen;
