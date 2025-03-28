@@ -4,7 +4,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 
 const ResultScreen = () => {
     const router = useRouter();
-    const { results, totalQuestions: totalQuestionsRaw } = useLocalSearchParams();
+    const { results, totalQuestions: totalQuestionsRaw, testName } = useLocalSearchParams(); // Lấy thêm testName
+    console.log('react', results)
     const totalQuestions = Number(totalQuestionsRaw) || 0;
 
     const parsedResults: { id: number; question: string; isCorrect: boolean; selectedAnswer?: string; correctAnswer: string }[] =
@@ -15,15 +16,20 @@ const ResultScreen = () => {
     return (
         <View style={styles.container}>
             {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Kết Quả Bài Thi</Text>
+            <View>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Kết quả của bộ đề {testName || 'Kết Quả Bài Thi'}</Text>
+                </View>
+                <View style={styles.divider} /> {/* Đường kẻ phân biệt */}
             </View>
 
             {/* Summary */}
             <View style={styles.summaryContainer}>
                 <Text style={styles.summaryText}>Tổng số câu: {totalQuestions}</Text>
-                <Text style={styles.summaryText}>Đúng: {correctAnswers}</Text>
-                <Text style={styles.summaryText}>Sai: {incorrectAnswers}</Text>
+                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                    <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
+                    <Text style={styles.summaryWrong}>Sai: {incorrectAnswers}</Text>
+                </View>
             </View>
 
             {/* Detailed Results */}
@@ -64,8 +70,11 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA', padding: 20 },
     header: { alignItems: 'center', marginBottom: 20 },
     headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#333' },
-    summaryContainer: { marginBottom: 20 },
+    summaryContainer: { marginBottom: 20, textAlign: 'center', alignItems: 'center' },
     summaryText: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+    summaryCorrect: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'green' },
+    summaryWrong: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'red' },
+
     resultList: { paddingBottom: 20 },
     resultItem: {
         backgroundColor: '#fff',
@@ -91,6 +100,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     backButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 10 }, // Định nghĩa đường kẻ
 });
 
 export default ResultScreen;

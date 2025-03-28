@@ -11,10 +11,11 @@ const DetailScreen = () => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.headerLeft}>
                     <Icon name="arrow-left" size={22} color="#007AFF" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Biển Báo</Text>
+                <View style={styles.headerRight} />
             </View>
 
             {/* Scrollable Content */}
@@ -31,8 +32,22 @@ const DetailScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
-    headerTitle: { fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 15,
+        backgroundColor: '#fff'
+    },
+    headerLeft: { width: 22, alignItems: 'flex-start' },
+    headerRight: { width: 22 },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        flex: 1,
+        color: '#333'
+    },
     scrollContent: { padding: 20, alignItems: 'center' }, // Đảm bảo căn giữa nhưng vẫn có thể cuộn
     image: { width: 200, height: 200, borderRadius: 8, marginBottom: 20 },
     title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },

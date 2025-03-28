@@ -25,7 +25,7 @@ const TestScreen = () => {
         console.error("Error fetching current license:", error);
       }
     };
-    
+
     fetchCurrentLicense();
   }, []);
 
@@ -81,7 +81,7 @@ const TestGrid = ({ quizzes, router }: { quizzes: any[]; router: any }) => {
         quizzes.map((quiz, index) => (
           <TouchableOpacity
             key={index}
-            style={[styles.testButton, { backgroundColor: quiz.color }]}
+            style={[styles.testButton, { backgroundColor: 'red' }]}
             onPress={() => handleTestPress(quiz)}
           >
             <Text style={styles.testText}>{quiz.name}</Text>

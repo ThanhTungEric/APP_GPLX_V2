@@ -69,7 +69,7 @@ const ExamScreen = () => {
         setIsModalVisible(false);
         router.push({
             pathname: '/testscreen/result',
-            params: { results: JSON.stringify(results), totalQuestions: questions.length },
+            params: { results: JSON.stringify(results), totalQuestions: questions.length, testName: title },
         });
     };
 
@@ -110,7 +110,7 @@ const ExamScreen = () => {
             {currentQuestion && (
                 <View style={styles.questionContainer}>
                     <ScrollView style={styles.questionScroll} contentContainerStyle={styles.questionScrollContent}>
-                        <Text style={styles.questionText}>{currentQuestion.content}</Text>
+                        <Text style={styles.questionText}>Câu hỏi:</Text><Text style={styles.questionText}>{currentQuestion.content}</Text>
                         {currentQuestion.imageName && (
                             <Image
                                 source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }}

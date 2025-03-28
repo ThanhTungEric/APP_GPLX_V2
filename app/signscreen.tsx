@@ -45,11 +45,6 @@ const SignScreen = () => {
             { id: 2, title: "Biển báo cấm 2", image: "https://png.pngtree.com/png-clipart/20240105/original/pngtree-traffic-stop-sign-symbol-photo-png-image_14019657.png", text: "Biển báo cấm 2" }
         ],
 
-        [], // Placeholder for "Biển Báo Hiệu Lệnh"
-        [], // Placeholder for "Biển Báo Chỉ Dẫn"
-        [], // Placeholder for "Biển Báo Phụ"
-        [], // Placeholder for "Vạch Kẻ Đường"
-        [], // Placeholder for "Biển Báo Tốc Độ"
     ];
 
     const handleCardPress = (item: { id: number; image: string; text: string, title: string }) => {
@@ -65,7 +60,11 @@ const SignScreen = () => {
             <Header router={router} />
 
             {/* Tabs */}
-            <ScrollView showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContainer}>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.tabContainer}
+            >
                 {tabs.map((tab, index) => (
                     <TouchableOpacity
                         key={index}
@@ -105,69 +104,40 @@ const SignScreen = () => {
 
 // Header Component
 const Header = ({ router }: { router: ReturnType<typeof useRouter> }) => (
-    <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/')}>
-            <Icon name="arrow-left" size={22} color="#007AFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Biển Báo Giao Thông</Text>
+    <View>
+        <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.push('/')} style={styles.headerLeft}>
+                <Icon name="arrow-left" size={22} color="#007AFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Biển Báo Giao Thông</Text>
+            <View style={styles.headerRight} />
+        </View>
+        <View style={styles.divider} /> {/* Đường kẻ phân biệt */}
     </View>
 );
 
 // Styles
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
-    headerTitle: { fontSize: 18, fontWeight: 'bold' },
-    tabContainer: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#fff', paddingVertical: 10 },
-    tabButton: { padding: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15, backgroundColor: '#fff' },
+    headerLeft: { width: 22, alignItems: 'flex-start' },
+    headerRight: { width: 22 },
+    headerTitle: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', flex: 1, color: '#333' },
+    tabContainer: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: 'transparent', paddingVertical: 10 },
+    tabButton: { padding: 10, borderBottomWidth: 2, borderBottomColor: 'transparent', height: 50, backgroundColor: 'transparent' },
     activeTabButton: { borderBottomColor: '#007AFF' },
     tabText: { fontSize: 14, color: '#000' },
     activeTabText: { fontWeight: 'bold', color: '#007AFF' },
     scrollContainer: { flexGrow: 1, padding: 15 },
     tabContent: { fontSize: 16, color: '#333', textAlign: 'center' },
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-        flexDirection: 'row',
-        alignItems: 'center',
-        display: 'flex'
-    },
-    cardImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 8,
-        marginRight: 10,
-        resizeMode: 'cover'
-    },
-    cardId: {
-        fontSize: 14,
-        color: '#333',
-        textAlign: 'left'
-    },
-    cardText: {
-        fontSize: 14,
-        color: '#333',
-        textAlign: 'left'
-    },
-    cardTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        textAlign: 'left'
-    },
-    cardContent: {
-        fontSize: 14,
-        color: '#333',
-        textAlign: 'left'
-    },
-    emptyMessage: { textAlign: 'center', color: '#666', marginTop: 20 }
+    card: { backgroundColor: '#fff', borderRadius: 8, padding: 10, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, flexDirection: 'row', alignItems: 'center', display: 'flex' },
+    cardImage: { width: 100, height: 100, borderRadius: 8, marginRight: 10, resizeMode: 'cover' },
+    cardId: { fontSize: 14, color: '#333', textAlign: 'left' },
+    cardText: { fontSize: 14, color: '#333', textAlign: 'left' },
+    cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', textAlign: 'left' },
+    cardContent: { fontSize: 14, color: '#333', textAlign: 'left' },
+    emptyMessage: { textAlign: 'center', color: '#666', marginTop: 20 },
+    divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 10 }, // Định nghĩa đường kẻ
 });
 
 export default SignScreen;
