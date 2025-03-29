@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Animated 
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import {setGradingMode, getGradingMode} from "./database/history";
-import {resetDatabase} from "./database/database";
+import { setGradingMode, getGradingMode } from "./database/history";
+import { resetDatabase } from "./database/database";
 
 const SettingsScreen = () => {
     const router = useRouter();
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     scrollContainer: { flex: 1 },
     content: { padding: 15 },
     sectionTitle: { fontSize: 14, fontWeight: "bold", color: "#888", marginTop: 20 },
-    versionTest: {fontSize: 16},
+    versionTest: { fontSize: 16 },
     settingItem: { flexDirection: "row", justifyContent: "space-between", alignItems: 'center', padding: 15, backgroundColor: "#fff", borderRadius: 10, marginTop: 10 },
     option: { color: "#007AFF", fontSize: 15 },
     radioContainer: { backgroundColor: "#fff", borderRadius: 10, marginTop: 10, paddingHorizontal: 5 },

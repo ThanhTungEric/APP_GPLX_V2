@@ -1,17 +1,42 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { saveExamResult } from '../database/history';
 
 const ResultScreen = () => {
     const router = useRouter();
-    const { results, totalQuestions: totalQuestionsRaw, testName } = useLocalSearchParams(); // Lấy thêm testName
-    console.log('react', results)
+    const { results, totalQuestions: totalQuestionsRaw, testName } = useLocalSearchParams();
+    console.log('react', results);
     const totalQuestions = Number(totalQuestionsRaw) || 0;
+    console.log('total', totalQuestions)
 
-    const parsedResults: { id: number; question: string; isCorrect: boolean; selectedAnswer?: string; correctAnswer: string }[] =
+    const parsedResults: { id: number; question: string; isCorrect: boolean; selectedAnswer?: string; correctAnswer: string; isCritical?: boolean }[] =
         Array.isArray(results) ? results : JSON.parse(results || '[]');
-    const correctAnswers = parsedResults.filter((item: any) => item.isCorrect).length;
+
+    console.log('-->', parsedResults)
+
+    const correctAnswers = parsedResults.filter((item) => item.isCorrect).length;
     const incorrectAnswers = Math.max(0, totalQuestions - correctAnswers);
+
+    const hasCriticalError = parsedResults.some((item) => item.isCritical && !item.isCorrect);
+    console.log('ssss', hasCriticalError)
+
+    const passed = !hasCriticalError;
+
+    useEffect(() => {
+        const saveResult = async () => {
+            const result = {
+                testName: Array.isArray(testName) ? testName.join(', ') : testName,
+                correctCount: correctAnswers,
+                incorrectCount: incorrectAnswers,
+                totalQuestions,
+                passed,
+                timestamp: new Date().toISOString(),
+            };
+            await saveExamResult(result);
+        };
+        saveResult();
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -20,16 +45,23 @@ const ResultScreen = () => {
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>Kết quả của bộ đề {testName || 'Kết Quả Bài Thi'}</Text>
                 </View>
-                <View style={styles.divider} /> {/* Đường kẻ phân biệt */}
+                <View style={styles.divider} />
             </View>
 
             {/* Summary */}
             <View style={styles.summaryContainer}>
-                <Text style={styles.summaryText}>Tổng số câu: {totalQuestions}</Text>
-                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
-                    <Text style={styles.summaryWrong}>Sai: {incorrectAnswers}</Text>
-                </View>
+                (
+                <>
+                    <Text style={styles.summaryText}>Tổng số câu: {totalQuestions}</Text>
+                    <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                        <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
+                        <Text style={styles.summaryWrong}>Sai: {incorrectAnswers}</Text>
+                    </View>
+                </>
+                )
+                {hasCriticalError && (
+                    <Text style={styles.failText}>Bạn đã bị đánh rớt do sai câu hỏi điểm liệt!</Text>
+                )}
             </View>
 
             {/* Detailed Results */}
@@ -53,6 +85,9 @@ const ResultScreen = () => {
                         <Text style={styles.resultAnswer}>
                             Đáp án đúng: {item.correctAnswer}
                         </Text>
+                        {item.isCritical && (
+                            <Text style={styles.criticalQuestion}>Câu hỏi điểm liệt</Text>
+                        )}
                     </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.resultList}
@@ -74,7 +109,8 @@ const styles = StyleSheet.create({
     summaryText: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
     summaryCorrect: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'green' },
     summaryWrong: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'red' },
-
+    failText: { fontSize: 18, fontWeight: 'bold', color: 'red', textAlign: 'center', marginBottom: 10 },
+    criticalQuestion: { fontSize: 14, color: 'orange', fontStyle: 'italic', marginTop: 5 },
     resultList: { paddingBottom: 20 },
     resultItem: {
         backgroundColor: '#fff',

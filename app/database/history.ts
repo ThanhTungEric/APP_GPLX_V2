@@ -1,5 +1,6 @@
 import { openDatabase } from './database';
-import {getLicenseIdByName} from './licenses';
+import { getLicenseIdByName } from './licenses';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface License {
     id: number;
@@ -93,3 +94,40 @@ export async function resetHistory(): Promise<void> {
     const db = await openDatabase();
     await db.runAsync('DELETE FROM history');
 }
+
+export const saveExamResult = async (result: {
+    testName: string;
+    correctCount: number;
+    incorrectCount: number;
+    totalQuestions: number;
+    passed: boolean;
+    timestamp: string;
+}) => {
+    try {
+        const existingHistory = await AsyncStorage.getItem('examHistory');
+        const history = existingHistory ? JSON.parse(existingHistory) : [];
+        history.push(result);
+        await AsyncStorage.setItem('examHistory', JSON.stringify(history));
+    } catch (error) {
+        console.error('Error saving exam result:', error);
+    }
+};
+
+export const getExamHistory = async () => {
+    try {
+        const history = await AsyncStorage.getItem('examHistory');
+        return history ? JSON.parse(history) : [];
+    } catch (error) {
+        console.error('Error fetching exam history:', error);
+        return [];
+    }
+};
+
+export const clearExamHistory = async () => {
+    try {
+        await AsyncStorage.removeItem('examHistory'); // Xóa dữ liệu trong AsyncStorage
+        console.log('Exam history cleared successfully.');
+    } catch (error) {
+        console.error('Error clearing exam history:', error);
+    }
+};

@@ -17,6 +17,7 @@ const StudyScreen = () => {
 
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
     useEffect(() => {
         async function fetchQuestions() {
@@ -33,13 +34,19 @@ const StudyScreen = () => {
     const handlePrevious = () => {
         if (currentIndex > 0) {
             setCurrentIndex(currentIndex - 1);
+            setSelectedOption(null); // Reset lựa chọn khi quay lại câu hỏi trước
         }
     };
 
     const handleNext = () => {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
+            setSelectedOption(null); // Reset lựa chọn khi chuyển sang câu hỏi mới
         }
+    };
+
+    const handleOptionSelect = (index: number) => {
+        setSelectedOption(index); // Lưu lại đáp án được chọn
     };
 
     return (
@@ -58,15 +65,18 @@ const StudyScreen = () => {
                         )}
 
                         {JSON.parse(questions[currentIndex].options).map((option: string, index: number) => (
-                            <Text
+                            <TouchableOpacity
                                 key={index}
                                 style={[
                                     styles.option,
-                                    index === questions[currentIndex].correctAnswerIndex && styles.correctOption,
+                                    selectedOption !== null && index === questions[currentIndex].correctAnswerIndex && styles.correctOption,
+                                    selectedOption !== null && index === selectedOption && index !== questions[currentIndex].correctAnswerIndex && styles.incorrectOption,
                                 ]}
+                                onPress={() => handleOptionSelect(index)}
+                                disabled={selectedOption !== null} // Chỉ cho phép chọn một lần
                             >
-                                {index + 1}. {option}
-                            </Text>
+                                <Text>{index + 1}. {option}</Text>
+                            </TouchableOpacity>
                         ))}
                     </View>
                 </View>
@@ -104,6 +114,7 @@ const styles = StyleSheet.create({
     optionsContainer: { marginTop: 10 },
     option: { fontSize: 16, marginBottom: 5, padding: 10, backgroundColor: '#F4F4F4', borderRadius: 5 },
     correctOption: { backgroundColor: '#D4EDDA', color: '#155724', fontWeight: 'bold' },
+    incorrectOption: { backgroundColor: '#F8D7DA', color: '#721C24', fontWeight: 'bold' },
     navigationContainer: { justifyContent: 'flex-end', marginBottom: 10 },
     navigationButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
     navButton: { padding: 15, backgroundColor: '#007AFF', borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5 },

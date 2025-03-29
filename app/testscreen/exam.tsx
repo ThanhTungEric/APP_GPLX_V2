@@ -16,6 +16,7 @@ const ExamScreen = () => {
         chapterId: number;
         imageName?: string;
         number: number;
+        isCritical?: boolean;
     }
 
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -27,7 +28,12 @@ const ExamScreen = () => {
         async function fetchQuestions() {
             try {
                 const allQuestions = await getAllQuestions();
-                const filteredQuestions = allQuestions.filter((question) => question.chapterId === Number(id));
+                const filteredQuestions = allQuestions
+                    .filter((question) => question.chapterId === Number(id))
+                    .map((question) => ({
+                        ...question,
+                        isCritical: !!question.isCritical,
+                    }));
                 console.log('Fetched questions for chapter:', filteredQuestions);
                 setQuestions(filteredQuestions);
             } catch (error) {
@@ -64,12 +70,21 @@ const ExamScreen = () => {
             selectedAnswer: selectedAnswers[question.id],
             correctAnswer: question.correctAnswerIndex,
             isCorrect: selectedAnswers[question.id] === question.correctAnswerIndex,
+            isCritical: question.isCritical, // Thêm thuộc tính isCritical để kiểm tra câu hỏi điểm liệt
         }));
+
+        // Kiểm tra nếu có câu hỏi điểm liệt bị trả lời sai
+        const hasCriticalError = results.some((result) => result.isCritical && !result.isCorrect);
 
         setIsModalVisible(false);
         router.push({
             pathname: '/testscreen/result',
-            params: { results: JSON.stringify(results), totalQuestions: questions.length, testName: title },
+            params: {
+                results: JSON.stringify(results),
+                totalQuestions: questions.length,
+                testName: title,
+                hasCriticalError: String(hasCriticalError), // Truyền thêm thông tin rớt do câu hỏi điểm liệt
+            },
         });
     };
 
