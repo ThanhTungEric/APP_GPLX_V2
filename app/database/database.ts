@@ -87,6 +87,16 @@ export async function createTables() {
       FOREIGN KEY (questionId) REFERENCES questions(id),
       PRIMARY KEY (quizId, questionId)
     );
+
+    CREATE TABLE IF NOT EXISTS quizesshistory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      quizId INTEGER,
+      correctCount INTEGER,
+      incorrectCount INTEGER,
+      passed BOOLEAN,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (quizId) REFERENCES quizzes(id)
+    );
   `);
 }
 
@@ -134,6 +144,8 @@ export async function resetDatabase() {
     DROP TABLE IF EXISTS question_licenses;
     DROP TABLE IF EXISTS quizzes;
     DROP TABLE IF EXISTS version;
+    DROP TABLE IF EXISTS quizesshistory;
+
   `);
   console.log('🗑️ Đã xóa tất cả dữ liệu!');
   await createTables();
@@ -151,7 +163,7 @@ export async function updateDataFromAPI() {
       API.get('/licenses'),
       API.get('/questions'),
       API.get('/quizzes'),
-      API.get('/versions')
+      API.get('/versions'),
     ]);
 
     await db.withTransactionAsync(async () => {
@@ -163,6 +175,7 @@ export async function updateDataFromAPI() {
       await db.runAsync('DELETE FROM question_licenses');
       await db.runAsync('DELETE FROM quiz_questions');
       await db.runAsync('DELETE FROM version');
+      await db.runAsync('DELETE FROM quizesshistory')
 
       // Thêm mới
       for (const chapter of chaptersRes.data) {
@@ -221,6 +234,7 @@ export async function updateDataFromAPI() {
       for (const version of versionsRes.data) {
         await db.runAsync('INSERT INTO version (version) VALUES (?)', version.version);
       }
+
       console.log('🔄 Đã cập nhật dữ liệu từ API!');
     });
   } catch (error) {

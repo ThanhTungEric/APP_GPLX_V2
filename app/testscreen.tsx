@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
 import { getQuizzesByLicense } from './database/quizzes';
-import { getCurrentLicenseId, getExamHistory, clearExamHistory } from './database/history';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCurrentLicenseId } from './database/history';
+import { getQuizHistory, saveQuizHistory, clearQuizHistory } from './database/quizesshistory';
 
 interface Quiz {
   id: number;
@@ -15,7 +15,7 @@ const TestScreen = () => {
   const router = useRouter();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [currentLicense, setCurrentLicense] = useState<number | null>(null);
-  const [quizResults, setQuizResults] = useState<Record<string, any>>({});
+  const [quizResults, setQuizResults] = useState<Record<number, any>>({});
 
   useEffect(() => {
     const fetchCurrentLicense = async () => {
@@ -47,24 +47,32 @@ const TestScreen = () => {
 
   useEffect(() => {
     const fetchQuizResults = async () => {
-      const history = await getExamHistory();
-      const resultsMap = history.reduce((acc: Record<string, any>, item: any) => {
-        acc[item.testName] = item;
-        return acc;
-      }, {});
-      setQuizResults(resultsMap);
+      const results: Record<number, any> = {};
+      for (const quiz of quizzes) {
+        const history = await getQuizHistory(quiz.id);
+        console.log('hiss', history)
+        if (history.length > 0) {
+          results[quiz.id] = history[0];
+        }
+      }
+      setQuizResults(results);
     };
-    fetchQuizResults();
-  }, []);
 
-  const handleClearData = async () => {
-    try {
-      await clearExamHistory();
-      setQuizResults({});
-    } catch (error) {
-      console.error('Error clearing data:', error);
+    if (quizzes.length > 0) {
+      fetchQuizResults();
     }
-  };
+  }, [quizzes]);
+
+  // const handleClearData = async () => {
+  //   try {
+  //     for (const quiz of quizzes) {
+  //       await clearQuizHistory(quiz.id);
+  //     }
+  //     setQuizResults({});
+  //   } catch (error) {
+  //     console.error('Error clearing data:', error);
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
@@ -72,7 +80,7 @@ const TestScreen = () => {
       <TestGrid quizzes={quizzes} router={router} quizResults={quizResults} />
       {quizzes.length > 0 && (
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.clearButton} onPress={handleClearData}>
+          <TouchableOpacity style={styles.clearButton}>
             <Text style={styles.clearButtonText}>Xóa dữ liệu thi thử</Text>
           </TouchableOpacity>
         </View>
@@ -90,22 +98,22 @@ const Header = ({ router }: { router: any }) => (
   </View>
 );
 
-const TestGrid = ({ quizzes, router, quizResults }: { quizzes: any[]; router: any; quizResults: Record<string, any> }) => {
-  const handleTestPress = (quiz: { id: number; name: string; description: string }) => {
+const TestGrid = ({ quizzes, router, quizResults }: { quizzes: Quiz[]; router: any; quizResults: Record<number, any> }) => {
+  const handleTestPress = (quiz: Quiz) => {
     router.push({
       pathname: '/testdetailscreen',
-      params: { id: quiz.id, title: quiz.name, description: quiz.description }
+      params: { id: quiz.id, title: quiz.name }
     });
   };
 
   return (
     <View style={styles.testGrid}>
       {quizzes.length > 0 ? (
-        quizzes.map((quiz, index) => {
-          const result = quizResults[quiz.name];
+        quizzes.map((quiz) => {
+          const result = quizResults[quiz.id];
           return (
             <TouchableOpacity
-              key={index}
+              key={quiz.id}
               style={[
                 styles.testButton,
                 { backgroundColor: result ? (result.passed ? '#4CAF50' : '#FF5252') : '#FFFFFF' }
@@ -127,7 +135,9 @@ const TestGrid = ({ quizzes, router, quizResults }: { quizzes: any[]; router: an
             </TouchableOpacity>
           );
         })
-      ) : (<Text style={styles.noQuizzesText}>Không có bộ đề nào</Text>)}
+      ) : (
+        <Text style={styles.noQuizzesText}>Không có bộ đề nào</Text>
+      )}
     </View>
   );
 };

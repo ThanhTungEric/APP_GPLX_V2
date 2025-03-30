@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 const TestDetailScreen = () => {
     const router = useRouter();
     const { id, title, description } = useLocalSearchParams();
+    console.log(id, title, description)
 
     const handleStartTest = () => {
         router.push({

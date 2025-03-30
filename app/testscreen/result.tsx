@@ -1,42 +1,39 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { saveExamResult } from '../database/history';
+import { saveQuizHistory } from '../database/quizesshistory';
 
 const ResultScreen = () => {
     const router = useRouter();
-    const { results, totalQuestions: totalQuestionsRaw, testName } = useLocalSearchParams();
-    console.log('react', results);
+    const { results, totalQuestions: totalQuestionsRaw, testName, id: quizIdRaw } = useLocalSearchParams();
     const totalQuestions = Number(totalQuestionsRaw) || 0;
-    console.log('total', totalQuestions)
+    const quizId = Number(quizIdRaw);
+    console.log('->quizId', quizId)
 
     const parsedResults: { id: number; question: string; isCorrect: boolean; selectedAnswer?: string; correctAnswer: string; isCritical?: boolean }[] =
         Array.isArray(results) ? results : JSON.parse(results || '[]');
 
-    console.log('-->', parsedResults)
-
     const correctAnswers = parsedResults.filter((item) => item.isCorrect).length;
+    console.log('-->correctAnswers', correctAnswers)
     const incorrectAnswers = Math.max(0, totalQuestions - correctAnswers);
-
+    console.log('-->incorrectAnswers', correctAnswers)
     const hasCriticalError = parsedResults.some((item) => item.isCritical && !item.isCorrect);
-    console.log('ssss', hasCriticalError)
-
+    console.log('-->hasCriticalError', hasCriticalError)
     const passed = !hasCriticalError;
+    console.log('-->passed', passed)
 
     useEffect(() => {
         const saveResult = async () => {
-            const result = {
-                testName: Array.isArray(testName) ? testName.join(', ') : testName,
-                correctCount: correctAnswers,
-                incorrectCount: incorrectAnswers,
-                totalQuestions,
-                passed,
-                timestamp: new Date().toISOString(),
-            };
-            await saveExamResult(result);
+            if (!isNaN(quizId)) {
+                const a = await saveQuizHistory(quizId, correctAnswers, incorrectAnswers, passed);
+                console.log('llll', a)
+                console.log('✅ Quiz result saved to quizesshistory.');
+            } else {
+                console.warn('⚠️ Quiz ID is invalid. Cannot save result.');
+            }
         };
         saveResult();
-    }, []);
+    }, [quizId, correctAnswers, incorrectAnswers, passed]);
 
     return (
         <View style={styles.container}>
@@ -50,15 +47,11 @@ const ResultScreen = () => {
 
             {/* Summary */}
             <View style={styles.summaryContainer}>
-                (
-                <>
-                    <Text style={styles.summaryText}>Tổng số câu: {totalQuestions}</Text>
-                    <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                        <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
-                        <Text style={styles.summaryWrong}>Sai: {incorrectAnswers}</Text>
-                    </View>
-                </>
-                )
+                <Text style={styles.summaryText}>Tổng số câu: {totalQuestions}</Text>
+                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                    <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
+                    <Text style={styles.summaryWrong}>Sai: {incorrectAnswers}</Text>
+                </View>
                 {hasCriticalError && (
                     <Text style={styles.failText}>Bạn đã bị đánh rớt do sai câu hỏi điểm liệt!</Text>
                 )}
@@ -136,7 +129,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     backButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 10 }, // Định nghĩa đường kẻ
+    divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 10 },
 });
 
 export default ResultScreen;

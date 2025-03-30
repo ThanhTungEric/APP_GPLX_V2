@@ -7,6 +7,7 @@ import { getAllQuestions } from '../database/questions';
 const ExamScreen = () => {
     const router = useRouter();
     const { id, title } = useLocalSearchParams();
+    console.log('id', id)
 
     interface Question {
         id: number;
@@ -83,7 +84,8 @@ const ExamScreen = () => {
                 results: JSON.stringify(results),
                 totalQuestions: questions.length,
                 testName: title,
-                hasCriticalError: String(hasCriticalError), // Truyền thêm thông tin rớt do câu hỏi điểm liệt
+                hasCriticalError: String(hasCriticalError),
+                id: id,
             },
         });
     };
