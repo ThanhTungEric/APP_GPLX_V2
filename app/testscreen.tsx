@@ -36,6 +36,7 @@ const TestScreen = () => {
         try {
           const quizzesData = await getQuizzesByLicense(currentLicense);
           setQuizzes(quizzesData);
+          console.log("dddd", quizzesData);
         } catch (error) {
           console.error("Error fetching quizzes by license:", error);
         }

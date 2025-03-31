@@ -125,8 +125,6 @@ const StudyTopics = () => {
       try {
         const chapters = await getAllChapters();
         const questionCounts = await getQuestionCountsByChapter();
-        console.log('---->', chapters)
-        console.log('----------> ', questionCounts)
 
         const chaptersWithCounts = chapters.map((chapter) => {
           const countData = questionCounts.find((q) => q.chapterId === chapter.id);

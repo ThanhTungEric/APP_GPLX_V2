@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ScrollView, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getAllQuestions } from '../database/questions';
+import { getAllQuestions, getQuestionById } from '../database/questions';
+import { getQuestionsByQuiz } from '../database/quizzes';
 
 const ExamScreen = () => {
     const router = useRouter();
     const { id, title } = useLocalSearchParams();
-    console.log('id', id)
+    const [imageLoaded, setImageLoaded] = useState(true);
 
     interface Question {
         id: number;
@@ -26,22 +27,26 @@ const ExamScreen = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
 
     useEffect(() => {
-        async function fetchQuestions() {
+        const fetchQuestions = async () => {
             try {
-                const allQuestions = await getAllQuestions();
-                const filteredQuestions = allQuestions
-                    .filter((question) => question.chapterId === Number(id))
-                    .map((question) => ({
-                        ...question,
-                        isCritical: !!question.isCritical,
-                    }));
-                console.log('Fetched questions for chapter:', filteredQuestions);
-                setQuestions(filteredQuestions);
+                const quizId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
+                const result = await getQuestionsByQuiz(quizId);
+
+                const formattedQuestions = result.map((q) => ({
+                    ...q,
+                    isCritical: !!q.isCritical,
+                    options: typeof q.options === 'string' ? q.options : JSON.stringify(q.options),
+                }));
+
+                setQuestions(formattedQuestions);
             } catch (error) {
                 console.error('Error fetching questions:', error);
             }
+        };
+
+        if (id) {
+            fetchQuestions();
         }
-        fetchQuestions();
     }, [id]);
 
     const handleAnswerSelect = (questionId: number, answerIndex: number) => {
@@ -71,10 +76,9 @@ const ExamScreen = () => {
             selectedAnswer: selectedAnswers[question.id],
             correctAnswer: question.correctAnswerIndex,
             isCorrect: selectedAnswers[question.id] === question.correctAnswerIndex,
-            isCritical: question.isCritical, // Thêm thuộc tính isCritical để kiểm tra câu hỏi điểm liệt
+            isCritical: question.isCritical,
         }));
 
-        // Kiểm tra nếu có câu hỏi điểm liệt bị trả lời sai
         const hasCriticalError = results.some((result) => result.isCritical && !result.isCorrect);
 
         setIsModalVisible(false);
@@ -102,32 +106,14 @@ const ExamScreen = () => {
                 <Text style={styles.headerTitle}>{title}</Text>
             </View>
 
-            {/* Question List */}
-            {/* <View style={styles.questionListContainer}>
-                <FlatList
-                    data={questions}
-                    keyExtractor={(item) => item.id.toString()}
-                    horizontal
-                    renderItem={({ item, index }) => (
-                        <TouchableOpacity
-                            style={[
-                                styles.questionListButton,
-                                currentQuestionIndex === index && styles.activeQuestionListButton
-                            ]}
-                            onPress={() => setCurrentQuestionIndex(index)}
-                        >
-                            <Text style={styles.questionListButtonText}>{item.number}</Text>
-                        </TouchableOpacity>
-                    )}
-                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No questions available</Text>} // Handle empty list
-                />
-            </View> */}
-
             {/* Question */}
             {currentQuestion && (
                 <View style={styles.questionContainer}>
                     <ScrollView style={styles.questionScroll} contentContainerStyle={styles.questionScrollContent}>
-                        <Text style={styles.questionText}>Câu hỏi:</Text><Text style={styles.questionText}>{currentQuestion.content}</Text>
+                        <Text style={styles.questionText}>
+                            Câu hỏi {currentQuestionIndex + 1}/{questions.length}:
+                        </Text>
+                        <Text style={styles.questionText}>{currentQuestion.content}</Text>
                         {currentQuestion.imageName && (
                             <Image
                                 source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }}
