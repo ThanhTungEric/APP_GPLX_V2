@@ -37,7 +37,7 @@ const SettingsScreen = () => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => router.push('/')}>
                     <MaterialCommunityIcons name="close" size={30} color="#007AFF" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Cài đặt</Text>

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getQuestionsByChapter } from './database/questions';
 
+import {insertSavedQuestion, getSavedQuestionByQuestionId} from "./database/savequestion";
 const StudyScreen = () => {
     const router = useRouter();
     const { id, title } = useLocalSearchParams();
@@ -51,11 +52,10 @@ const StudyScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Ôn tập: {title}</Text>
+            <Text style={styles.title}>{title}</Text>
             {questions.length > 0 ? (
                 <View style={styles.questionContainer}>
-                    <Text style={styles.questionNumber}>Câu {currentIndex + 1}:</Text>
-                    <Text style={styles.questionContent}>{questions[currentIndex].content}</Text>
+                    <Text style={styles.questionContent}>Câu {currentIndex + 1}: {questions[currentIndex].content}</Text>
                     <View style={styles.optionsContainer}>
                         {questions[currentIndex].imageName && (
                             <Image
@@ -75,7 +75,7 @@ const StudyScreen = () => {
                                 onPress={() => handleOptionSelect(index)}
                                 disabled={selectedOption !== null} // Chỉ cho phép chọn một lần
                             >
-                                <Text>{index + 1}. {option}</Text>
+                                <Text style={styles.optionText}>{index + 1}. {option}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -106,13 +106,14 @@ const StudyScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#F8F9FA' },
-    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-    questionContainer: { flex: 1, marginBottom: 20, padding: 15, backgroundColor: 'transparent', borderRadius: 10 },
-    questionNumber: { fontWeight: 'bold', marginBottom: 5 },
-    questionContent: { fontSize: 16, marginBottom: 10 },
+    container: { flex: 1, padding: 10, backgroundColor: '#F8F9FA' },
+    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 5, textAlign: "center" },
+    questionContainer: { flex: 1, marginBottom: 20, padding: 5, backgroundColor: 'transparent', borderRadius: 10 },
+    questionNumber: { fontWeight: 'bold', marginBottom: 5, fontSize: 17 },
+    questionContent: { fontSize: 17, marginBottom: 10 },
     optionsContainer: { marginTop: 10 },
-    option: { fontSize: 16, marginBottom: 5, padding: 10, backgroundColor: '#F4F4F4', borderRadius: 5 },
+    option: { marginBottom: 5, padding: 10, backgroundColor: '#F4F4F4', borderRadius: 5 },
+    optionText: {fontSize: 16.5},
     correctOption: { backgroundColor: '#D4EDDA', color: '#155724', fontWeight: 'bold' },
     incorrectOption: { backgroundColor: '#F8D7DA', color: '#721C24', fontWeight: 'bold' },
     navigationContainer: { justifyContent: 'flex-end', marginBottom: 10 },

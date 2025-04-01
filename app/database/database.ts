@@ -48,9 +48,12 @@ export async function createTables() {
     );
 
     CREATE TABLE IF NOT EXISTS licenses (
-      id INTEGER,
+      id INTEGER PRIMARY KEY,
       name TEXT UNIQUE,
-      description TEXT
+      description TEXT,
+      totalQuestions INTEGER,
+      requiredCorrect INTEGER,
+      durationMinutes INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS questions (
@@ -96,6 +99,12 @@ export async function createTables() {
       passed BOOLEAN,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (quizId) REFERENCES quizzes(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS save_question (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      questionId INTEGER NOT NULL,
+      answer TEXT
     );
   `);
 }
@@ -184,12 +193,17 @@ export async function updateDataFromAPI() {
 
       for (const license of licensesRes.data) {
         await db.runAsync(
-          'INSERT INTO licenses (id ,name, description) VALUES (?, ?, ?)',
+          `INSERT INTO licenses (id, name, description, totalQuestions, requiredCorrect, durationMinutes)
+           VALUES (?, ?, ?, ?, ?, ?)`,
           license.id,
           license.name,
-          license.description
+          license.description,
+          license.totalQuestions,
+          license.requiredCorrect,
+          license.durationMinutes
         );
       }
+      
 
       for (const q of questionsRes.data) {
         await db.runAsync(

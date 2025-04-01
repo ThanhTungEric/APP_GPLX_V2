@@ -1,25 +1,36 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
 import { createTables, checkVersion, getVersion } from './database/database';
 import { getAllChapters } from './database/chapter';
 import { getQuestionCountsByChapter } from './database/questions';
+import {getCurrentLicense} from './database/history';
 
 const Index = () => {
 
   const router = useRouter();
+  const [currentLicense, setCurrentLicense] = useState<string | null>(null);
   useEffect(() => {
     (async () => {
       await createTables();
       await checkVersion();
       await getVersion();
+
+      const license = await getCurrentLicense();
+
+      if (!license) {
+        router.replace('/select-gplx');
+      } else {
+        setCurrentLicense(license);
+      }
     })();
   }, []);
+  
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Header router={router} />
+      <Header router={router} licenses={currentLicense}/>
 
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -40,12 +51,12 @@ const Index = () => {
 };
 
 // Header Component
-const Header = ({ router }: { router: ReturnType<typeof useRouter> }) => (
+const Header = ({ router, licenses }: { router: ReturnType<typeof useRouter>; licenses: string | null }) => (
   <View style={styles.header}>
     <TouchableOpacity onPress={() => router.push('/settings')}>
       <Icon name="cog" size={22} color="#007AFF" />
     </TouchableOpacity>
-    <Text style={styles.headerTitle}>OTOMOTO - C1</Text>
+    <Text style={styles.headerTitle}>HOCLAIXE - {licenses ?? "?"}</Text>
     <Icon name="trophy" size={22} color="gold" />
   </View>
 );

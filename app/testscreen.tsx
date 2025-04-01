@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
 import { getQuizzesByLicense } from './database/quizzes';
 import { getCurrentLicenseId } from './database/history';
-import { getQuizHistory, saveQuizHistory, clearQuizHistory } from './database/quizesshistory';
-
+import { getQuizHistory } from './database/quizesshistory';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { getCurrentLicense } from './database/history';
 interface Quiz {
   id: number;
   name: string;
@@ -17,12 +17,14 @@ const TestScreen = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [currentLicense, setCurrentLicense] = useState<number | null>(null);
   const [quizResults, setQuizResults] = useState<Record<number, any>>({});
-
+  const [currentLicenseName, setCurrentLicenseName] = useState<string | null>(null);
   useEffect(() => {
     const fetchCurrentLicense = async () => {
       try {
         const licenses = await getCurrentLicenseId();
+        const licenseName = await getCurrentLicense();
         setCurrentLicense(licenses);
+        setCurrentLicenseName(licenseName)
       } catch (error) {
         console.error("Error fetching current license:", error);
       }
@@ -66,31 +68,21 @@ const TestScreen = () => {
     }
   }, [quizzes]);
 
-  // const handleClearData = async () => {
-  //   try {
-  //     for (const quiz of quizzes) {
-  //       await clearQuizHistory(quiz.id);
-  //     }
-  //     setQuizResults({});
-  //   } catch (error) {
-  //     console.error('Error clearing data:', error);
-  //   }
-  // };
 
   return (
     <View style={styles.container}>
-      <Header router={router} />
+      <Header router={router} licenseName={currentLicenseName} />
       <TestGrid quizzes={quizzes} router={router} quizResults={quizResults} />
     </View>
   );
 };
 
-const Header = ({ router }: { router: any }) => (
+const Header = ({ router, licenseName, }: { router: any; licenseName: string | null; }) => (
   <View style={styles.header}>
-    <TouchableOpacity onPress={() => router.push('/')}>
-      <Icon name="arrow-left" size={22} color="#007AFF" />
+    <TouchableOpacity onPress={() => router.back()}>
+      <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
     </TouchableOpacity>
-    <Text style={styles.headerTitle}>OTOMOTO - C1</Text>
+    <Text style={styles.headerTitle}>HOCLAIXE - {licenseName}</Text>
   </View>
 );
 

@@ -53,9 +53,7 @@ export async function getCurrentLicenseId(): Promise<number | null> {
         'SELECT value FROM history WHERE key = ?',
         key
     );
-
     if (!result) return null;
-
     return await getLicenseIdByName(result.value);
 }
 // create key grading_mode

@@ -61,8 +61,8 @@ const SelectGPLXScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#007AFF" />
+        <TouchableOpacity onPress={() => router.push('/settings')}>
+          <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chọn loại GPLX</Text>
       </View>
