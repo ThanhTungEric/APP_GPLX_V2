@@ -7,7 +7,7 @@ import { getQuestionsByQuiz } from '../database/quizzes';
 
 const ExamScreen = () => {
     const router = useRouter();
-    const { id, title } = useLocalSearchParams();
+    const { id, title, licenseName } = useLocalSearchParams();
     const [imageLoaded, setImageLoaded] = useState(true);
 
     interface Question {
@@ -90,6 +90,7 @@ const ExamScreen = () => {
                 testName: title,
                 hasCriticalError: String(hasCriticalError),
                 id: id,
+                licenseName: licenseName
             },
         });
     };

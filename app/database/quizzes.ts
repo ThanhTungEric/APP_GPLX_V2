@@ -31,12 +31,15 @@ export async function getAllQuizzes(): Promise<Quiz[]> {
     return db.getAllAsync<Quiz>(query);
 }
 
-export async function getQuizzesByLicense(licenseId: number): Promise<Quiz[]> {
+export async function getQuizzesByLicense(licenseId: number): Promise<(Quiz & { licenseName: string })[]> {
     const db = await openDatabase();
     const query = `
-      SELECT * FROM quizzes WHERE licenseId = ?
+      SELECT q.*, l.name as licenseName 
+      FROM quizzes q
+      JOIN licenses l ON q.licenseId = l.id
+      WHERE q.licenseId = ?
     `;
-    return db.getAllAsync<Quiz>(query, licenseId);
+    return db.getAllAsync<Quiz & { licenseName: string }>(query, licenseId);
 }
 
 export async function getQuestionsByQuiz(quizId: number): Promise<Question[]> {

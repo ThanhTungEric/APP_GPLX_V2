@@ -5,10 +5,10 @@ import { saveQuizHistory } from '../database/quizesshistory';
 
 const ResultScreen = () => {
     const router = useRouter();
-    const { results, totalQuestions: totalQuestionsRaw, testName, id: quizIdRaw } = useLocalSearchParams();
+    const { results, totalQuestions: totalQuestionsRaw, testName, id: quizIdRaw, licenseName: licenseName } = useLocalSearchParams();
     const totalQuestions = Number(totalQuestionsRaw) || 0;
     const quizId = Number(quizIdRaw);
-    console.log('->quizId', quizId)
+    console.log('->quizId', licenseName)
 
     const parsedResults: { id: number; question: string; isCorrect: boolean; selectedAnswer?: string; correctAnswer: string; isCritical?: boolean }[] =
         Array.isArray(results) ? results : JSON.parse(results || '[]');
@@ -19,7 +19,21 @@ const ResultScreen = () => {
     console.log('-->incorrectAnswers', correctAnswers)
     const hasCriticalError = parsedResults.some((item) => item.isCritical && !item.isCorrect);
     console.log('-->hasCriticalError', hasCriticalError)
-    const passed = !hasCriticalError;
+
+    const licenseRequirements: Record<string, number> = {
+        A1: 21,
+        A: 23,
+        B1: 0,
+        C1: 32,
+        C: 36,
+        D1: 36,
+        D2: 41, D: 41, BE: 41, C1E: 41, CE: 41, D1E: 41, D2E: 41, DE: 41
+    };
+
+    const requiredCorrectAnswers = licenseRequirements[Array.isArray(licenseName) ? licenseName[0] : licenseName];
+    const passed = !hasCriticalError && correctAnswers >= requiredCorrectAnswers;
+
+    console.log('-->requiredCorrectAnswers', requiredCorrectAnswers);
     console.log('-->passed', passed)
 
     useEffect(() => {
@@ -47,6 +61,7 @@ const ResultScreen = () => {
 
             {/* Summary */}
             <View style={styles.summaryContainer}>
+                <Text style={styles.summaryText}>Loại bằng: {licenseName || 'Không xác định'}</Text>
                 <Text style={styles.summaryText}>Tổng số câu: {totalQuestions}</Text>
                 <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                     <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
@@ -54,6 +69,11 @@ const ResultScreen = () => {
                 </View>
                 {hasCriticalError && (
                     <Text style={styles.failText}>Bạn đã bị đánh rớt do sai câu hỏi điểm liệt!</Text>
+                )}
+                {!passed && !hasCriticalError && (
+                    <Text style={styles.failText}>
+                        Bạn đã bị đánh rớt do không đạt số câu đúng tối thiểu ({requiredCorrectAnswers}).
+                    </Text>
                 )}
             </View>
 

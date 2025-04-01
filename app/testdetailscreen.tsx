@@ -5,13 +5,13 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 const TestDetailScreen = () => {
     const router = useRouter();
-    const { id, title, description } = useLocalSearchParams();
-    console.log(id, title, description)
+    const { id, title, licenseName } = useLocalSearchParams();
+    console.log(id, title, licenseName)
 
     const handleStartTest = () => {
         router.push({
             pathname: '/testscreen/exam',
-            params: { id, title }
+            params: { id, title, licenseName }
         });
     };
 
@@ -28,7 +28,7 @@ const TestDetailScreen = () => {
             {/* Content */}
             <View style={styles.content}>
                 <Text style={styles.title}>Bộ Đề: {title}</Text>
-                <Text style={styles.description}>{description}</Text>
+                <Text style={styles.description}>{licenseName}</Text>
                 <TouchableOpacity style={styles.startButton} onPress={handleStartTest}>
                     <Text style={styles.startButtonText}>Bắt Đầu Thi</Text>
                 </TouchableOpacity>

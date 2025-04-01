@@ -9,6 +9,7 @@ import { getQuizHistory, saveQuizHistory, clearQuizHistory } from './database/qu
 interface Quiz {
   id: number;
   name: string;
+  licenseName: string;
 }
 
 const TestScreen = () => {
@@ -35,6 +36,7 @@ const TestScreen = () => {
       if (currentLicense !== null) {
         try {
           const quizzesData = await getQuizzesByLicense(currentLicense);
+          console.log('->', quizzesData)
           setQuizzes(quizzesData);
           console.log("dddd", quizzesData);
         } catch (error) {
@@ -79,13 +81,6 @@ const TestScreen = () => {
     <View style={styles.container}>
       <Header router={router} />
       <TestGrid quizzes={quizzes} router={router} quizResults={quizResults} />
-      {quizzes.length > 0 && (
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.clearButton}>
-            <Text style={styles.clearButtonText}>Xóa dữ liệu thi thử</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 };
@@ -103,7 +98,7 @@ const TestGrid = ({ quizzes, router, quizResults }: { quizzes: Quiz[]; router: a
   const handleTestPress = (quiz: Quiz) => {
     router.push({
       pathname: '/testdetailscreen',
-      params: { id: quiz.id, title: quiz.name }
+      params: { id: quiz.id, title: quiz.name, licenseName: quiz.licenseName }
     });
   };
 
