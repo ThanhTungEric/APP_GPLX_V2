@@ -54,3 +54,10 @@ export async function getQuestionCountsByChapter(): Promise<{ chapterId: number;
      GROUP BY chapterId`
   );
 }
+
+export async function getCriticalQuestions(): Promise<Question[]> {
+  const db = await openDatabase();
+  return db.getAllAsync<Question>(
+    'SELECT * FROM questions WHERE isCritical = 1'
+  );
+}

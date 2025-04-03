@@ -184,7 +184,7 @@ export async function updateDataFromAPI() {
       await db.runAsync('DELETE FROM question_licenses');
       await db.runAsync('DELETE FROM quiz_questions');
       await db.runAsync('DELETE FROM version');
-      await db.runAsync('DELETE FROM quizesshistory')
+      // await db.runAsync('DELETE FROM quizesshistory')
 
       // Thêm mới
       for (const chapter of chaptersRes.data) {

@@ -35,7 +35,6 @@ export async function saveQuizHistory(quizId: number, correctCount: number, inco
             incorrectCount,
             passed ? 1 : 0
         );
-        console.log('✅ Quiz history saved successfully.');
     } catch (error) {
         console.error('Error saving quiz history:', error);
     }
@@ -46,7 +45,6 @@ export async function clearQuizHistory(quizId: number): Promise<void> {
     const db = await openDatabase();
     try {
         await db.runAsync(`DELETE FROM quizesshistory WHERE quizId = ?`, quizId);
-        console.log('🗑️ Quiz history cleared successfully.');
     } catch (error) {
         console.error('Error clearing quiz history:', error);
     }

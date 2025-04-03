@@ -53,7 +53,6 @@ const TestScreen = () => {
       const results: Record<number, any> = {};
       for (const quiz of quizzes) {
         const history = await getQuizHistory(quiz.id);
-        console.log('hiss', history)
         if (history.length > 0) {
           results[quiz.id] = history[0];
         }
