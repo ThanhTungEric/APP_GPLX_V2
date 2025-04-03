@@ -77,6 +77,9 @@ const FeatureGrid = () => {
     else if (text === "CÂU HAY SAI") {
       router.push("/frequentquestionscreen");
     }
+    else if (text === "CÂU HỎI ĐIỂM LIỆT") {
+      router.push("/criticalscreens/criticalquestionsscreen");
+    }
     // Bạn có thể thêm điều kiện cho các button khác nếu cần thiết.
   };
 
@@ -85,7 +88,7 @@ const FeatureGrid = () => {
       {[
         { icon: "book", text: "THI THỬ", color: "#007AFF" },
         { icon: "bookmark", text: "LƯU", color: "#00C853" },
-        { icon: "times-circle", text: "CÂU SAI", color: "#FF3D00" },
+        { icon: "times-circle", text: "CÂU HỎI ĐIỂM LIỆT", color: "#FF3D00" },
         { icon: "file-text", text: "CÂU HAY SAI", color: "#FFD600" },
         { icon: "road", text: "SA HÌNH", color: "#007AFF" }, // Thêm SA HÌNH
         { icon: "lightbulb-o", text: "MẸO", color: "#00C853" }, // Thêm MẸO
