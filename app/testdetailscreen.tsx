@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getCurrentLicenseId } from './database/history';
 import { getLicenseById } from './database/licenses';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 type License = {
     id: number;
     name: string;
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
+        padding: 10,
         backgroundColor: '#fff',
         elevation: 4,
         shadowColor: '#000',

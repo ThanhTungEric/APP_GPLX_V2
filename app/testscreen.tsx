@@ -38,9 +38,7 @@ const TestScreen = () => {
       if (currentLicense !== null) {
         try {
           const quizzesData = await getQuizzesByLicense(currentLicense);
-          console.log('->', quizzesData)
           setQuizzes(quizzesData);
-          console.log("dddd", quizzesData);
         } catch (error) {
           console.error("Error fetching quizzes by license:", error);
         }
@@ -79,7 +77,7 @@ const TestScreen = () => {
 
 const Header = ({ router, licenseName, }: { router: any; licenseName: string | null; }) => (
   <View style={styles.header}>
-    <TouchableOpacity onPress={() => router.back()}>
+    <TouchableOpacity onPress={() => router.push('/')}>
       <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
     </TouchableOpacity>
     <Text style={styles.headerTitle}>HOCLAIXE - {licenseName}</Text>
@@ -132,7 +130,7 @@ const TestGrid = ({ quizzes, router, quizResults }: { quizzes: Quiz[]; router: a
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff', elevation: 2 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, backgroundColor: '#fff', elevation: 2 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   testGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 20 },
   testButton: { width: 120, height: 120, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginBottom: 20, backgroundColor: '#ffffff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 5 },

@@ -1,90 +1,128 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { saveQuizHistory } from '../database/quizesshistory';
+import { getLicenseById } from '../database/licenses';
+import { getCurrentLicenseId } from '../database/history';
+
+type License = {
+    id: number;
+    name: string;
+    description: string;
+    totalQuestions: number;
+    requiredCorrect: number;
+    durationMinutes: number;
+};
 
 const ResultScreen = () => {
     const router = useRouter();
-    const { results, totalQuestions: totalQuestionsRaw, testName, id: quizIdRaw, licenseName: licenseName } = useLocalSearchParams();
+    const { rawData, totalQuestions: totalQuestionsRaw, testName, id: quizIdRaw, licenseName } = useLocalSearchParams();
     const totalQuestions = Number(totalQuestionsRaw) || 0;
     const quizId = Number(quizIdRaw);
-    console.log('->quizId', licenseName)
+    const [licenseInfo, setLicenseInfo] = useState<License | null>(null);
 
-    const parsedResults: { id: number; question: string; isCorrect: boolean; selectedAnswer?: string; correctAnswer: string; isCritical?: boolean }[] =
-        Array.isArray(results) ? results : JSON.parse(results || '[]');
-
-    const correctAnswers = parsedResults.filter((item) => item.isCorrect).length;
-    console.log('-->correctAnswers', correctAnswers)
-    const incorrectAnswers = Math.max(0, totalQuestions - correctAnswers);
-    console.log('-->incorrectAnswers', correctAnswers)
-    const hasCriticalError = parsedResults.some((item) => item.isCritical && !item.isCorrect);
-    console.log('-->hasCriticalError', hasCriticalError)
-
-    const licenseRequirements: Record<string, number> = {
-        A1: 21,
-        A: 23,
-        B1: 0,
-        C1: 32,
-        C: 36,
-        D1: 36,
-        D2: 41, D: 41, BE: 41, C1E: 41, CE: 41, D1E: 41, D2E: 41, DE: 41
-    };
-
-    const requiredCorrectAnswers = licenseRequirements[Array.isArray(licenseName) ? licenseName[0] : licenseName];
-    const passed = !hasCriticalError && correctAnswers >= requiredCorrectAnswers;
-
-    console.log('-->requiredCorrectAnswers', requiredCorrectAnswers);
-    console.log('-->passed', passed)
-
+    // Lấy thông tin license
     useEffect(() => {
+        (async () => {
+            const licenseId = await getCurrentLicenseId();
+            if (licenseId) {
+                const numericId = Number(licenseId);
+                const data = await getLicenseById(numericId) as License;
+                setLicenseInfo(data);
+            }
+        })();
+    }, []);
+
+    // Xử lý dữ liệu quiz
+    const rawDataString = Array.isArray(rawData) ? rawData[0] : rawData || '[]';
+    const parsedRawData: {
+        id: number;
+        content: string;
+        options: string;
+        selectedAnswerIndex?: number;
+        correctAnswerIndex: number;
+        isCritical?: boolean;
+    }[] = JSON.parse(rawDataString);
+
+    const results = parsedRawData.map((item) => {
+        const options = JSON.parse(item.options);
+        return {
+            id: item.id,
+            question: item.content,
+            selectedAnswer: item.selectedAnswerIndex !== undefined ? options[item.selectedAnswerIndex] : undefined,
+            correctAnswer: options[item.correctAnswerIndex],
+            isCorrect: item.selectedAnswerIndex === item.correctAnswerIndex,
+            isCritical: item.isCritical,
+        };
+    });
+
+    const correctAnswers = results.filter((item) => item.isCorrect).length;
+    const incorrectAnswers = Math.max(0, totalQuestions - correctAnswers);
+    const hasCriticalError = results.some((item) => item.isCritical && !item.isCorrect);
+
+    // ✅ Tính passed chỉ khi licenseInfo có
+    const passed = licenseInfo
+        ? !hasCriticalError && correctAnswers >= licenseInfo.requiredCorrect
+        : false;
+
+    // ✅ Lưu kết quả sau khi licenseInfo đã có
+    useEffect(() => {
+        if (!licenseInfo) return;
+
         const saveResult = async () => {
             if (!isNaN(quizId)) {
-                const a = await saveQuizHistory(quizId, correctAnswers, incorrectAnswers, passed);
-                console.log('llll', a)
-                console.log('✅ Quiz result saved to quizesshistory.');
+                await saveQuizHistory(quizId, correctAnswers, incorrectAnswers, passed);
             } else {
                 console.warn('⚠️ Quiz ID is invalid. Cannot save result.');
             }
         };
         saveResult();
-    }, [quizId, correctAnswers, incorrectAnswers, passed]);
+    }, [licenseInfo, quizId, correctAnswers, incorrectAnswers, passed]);
 
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Kết quả của bộ đề {testName || 'Kết Quả Bài Thi'}</Text>
+                    <Text style={styles.headerTitle}>KẾT QUẢ BÀI THI</Text>
                 </View>
                 <View style={styles.divider} />
             </View>
 
-            {/* Summary */}
             <View style={styles.summaryContainer}>
-                <Text style={styles.summaryText}>Loại bằng: {licenseName || 'Không xác định'}</Text>
-                <Text style={styles.summaryText}>Tổng số câu: {totalQuestions}</Text>
-                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
-                    <Text style={styles.summaryWrong}>Sai: {incorrectAnswers}</Text>
-                </View>
                 {hasCriticalError && (
                     <Text style={styles.failText}>Bạn đã bị đánh rớt do sai câu hỏi điểm liệt!</Text>
                 )}
-                {!passed && !hasCriticalError && (
+
+                {licenseInfo && !passed && !hasCriticalError && (
                     <Text style={styles.failText}>
-                        Bạn đã bị đánh rớt do không đạt số câu đúng tối thiểu ({requiredCorrectAnswers}).
+                        Bạn đã bị đánh rớt do không đạt số câu đúng tối thiểu ({licenseInfo.requiredCorrect}).
                     </Text>
                 )}
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                    <Text style={styles.summaryCorrect}>Đúng: {correctAnswers}</Text>
+                    <Text style={styles.summaryWrong}>Sai: {incorrectAnswers}</Text>
+                </View>
             </View>
 
-            {/* Detailed Results */}
             <FlatList
-                data={parsedResults}
+                data={results}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         style={styles.resultItem}
-                        onPress={() => router.push({ pathname: '/testscreen/questiondetails', params: { id: item.id, question: item.question, selectedAnswer: item.selectedAnswer, correctAnswer: item.correctAnswer, isCorrect: String(item.isCorrect) } })}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/testscreen/questiondetails',
+                                params: {
+                                    id: item.id,
+                                    question: item.question,
+                                    selectedAnswer: item.selectedAnswer,
+                                    correctAnswer: item.correctAnswer,
+                                    isCorrect: String(item.isCorrect),
+                                },
+                            })
+                        }
                     >
                         <Text style={styles.resultQuestion}>
                             {item.id}. {item.question}
@@ -95,18 +133,13 @@ const ResultScreen = () => {
                         <Text style={styles.resultAnswer}>
                             Đáp án của bạn: {item.selectedAnswer || 'Chưa chọn'}
                         </Text>
-                        <Text style={styles.resultAnswer}>
-                            Đáp án đúng: {item.correctAnswer}
-                        </Text>
-                        {item.isCritical && (
-                            <Text style={styles.criticalQuestion}>Câu hỏi điểm liệt</Text>
-                        )}
+                        <Text style={styles.resultAnswer}>Đáp án đúng: {item.correctAnswer}</Text>
+                        {item.isCritical && <Text style={styles.criticalQuestion}>Câu hỏi điểm liệt</Text>}
                     </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.resultList}
             />
 
-            {/* Back Button */}
             <TouchableOpacity style={styles.backButton} onPress={() => router.push('/testscreen')}>
                 <Text style={styles.backButtonText}>Quay Lại</Text>
             </TouchableOpacity>
@@ -114,10 +147,16 @@ const ResultScreen = () => {
     );
 };
 
+
+// Styles giữ nguyên
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA', padding: 20 },
-    header: { alignItems: 'center', marginBottom: 20 },
-    headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#333' },
+    container: { flex: 1, backgroundColor: '#F8F9FA', padding: 10 },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
     summaryContainer: { marginBottom: 20, textAlign: 'center', alignItems: 'center' },
     summaryText: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
     summaryCorrect: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'green' },

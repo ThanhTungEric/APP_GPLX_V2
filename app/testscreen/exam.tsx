@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ScrollView, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getAllQuestions, getQuestionById } from '../database/questions';
 import { getQuestionsByQuiz } from '../database/quizzes';
 
 const ExamScreen = () => {
     const router = useRouter();
     const { id, title, licenseName } = useLocalSearchParams();
-    const [imageLoaded, setImageLoaded] = useState(true);
 
     interface Question {
         id: number;
@@ -70,27 +68,25 @@ const ExamScreen = () => {
     };
 
     const confirmSubmit = () => {
-        const results = questions.map((question) => ({
+        // Chuẩn bị dữ liệu để gửi sang ResultScreen
+        const rawData = questions.map((question) => ({
             id: question.id,
-            question: question.content,
-            selectedAnswer: selectedAnswers[question.id],
-            correctAnswer: question.correctAnswerIndex,
-            isCorrect: selectedAnswers[question.id] === question.correctAnswerIndex,
+            content: question.content,
+            options: question.options, // Gửi toàn bộ options
+            selectedAnswerIndex: selectedAnswers[question.id], // Chỉ gửi index của đáp án đã chọn
+            correctAnswerIndex: question.correctAnswerIndex, // Gửi đáp án đúng để ResultScreen tính toán
             isCritical: question.isCritical,
         }));
-
-        const hasCriticalError = results.some((result) => result.isCritical && !result.isCorrect);
 
         setIsModalVisible(false);
         router.push({
             pathname: '/testscreen/result',
             params: {
-                results: JSON.stringify(results),
+                rawData: JSON.stringify(rawData), // Gửi dữ liệu thô
                 totalQuestions: questions.length,
                 testName: title,
-                hasCriticalError: String(hasCriticalError),
                 id: id,
-                licenseName: licenseName
+                licenseName: licenseName,
             },
         });
     };
@@ -100,12 +96,12 @@ const ExamScreen = () => {
     return (
         <View style={styles.container}>
             {/* Header */}
-            <View style={styles.header}>
+            {/* <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <Icon name="arrow-left" size={22} color="#007AFF" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{title}</Text>
-            </View>
+            </View> */}
 
             {/* Question */}
             {currentQuestion && (
@@ -127,14 +123,13 @@ const ExamScreen = () => {
                             key={index}
                             style={[
                                 styles.answerButton,
-                                selectedAnswers[currentQuestion.id] === index && styles.selectedAnswerButton
+                                selectedAnswers[currentQuestion.id] === index && styles.selectedAnswerButton,
                             ]}
                             onPress={() => handleAnswerSelect(currentQuestion.id, index)}
                         >
                             <Text style={styles.answerText}>{option}</Text>
                         </TouchableOpacity>
                     ))}
-
                 </View>
             )}
 
@@ -147,16 +142,13 @@ const ExamScreen = () => {
                 >
                     <Text style={styles.navButtonText}>Câu Trước</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handleSubmit}
-                >
+                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
                     <Text style={styles.submitButtonText}>Nộp Bài</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[
                         styles.navButton,
-                        currentQuestionIndex === questions.length - 1 && styles.disabledNavButton
+                        currentQuestionIndex === questions.length - 1 && styles.disabledNavButton,
                     ]}
                     onPress={handleNextQuestion}
                     disabled={currentQuestionIndex === questions.length - 1}
@@ -175,9 +167,12 @@ const ExamScreen = () => {
                             keyExtractor={(item) => item.id.toString()}
                             renderItem={({ item }) => (
                                 <View style={styles.modalQuestionContainer}>
-                                    <Text style={styles.modalQuestionText}>{item.number}. {item.content}</Text>
+                                    <Text style={styles.modalQuestionText}>
+                                        {item.number}. {item.content}
+                                    </Text>
                                     <Text style={styles.modalAnswerText}>
-                                        Đáp án của bạn: {selectedAnswers[item.id] !== undefined
+                                        Đáp án của bạn:{' '}
+                                        {selectedAnswers[item.id] !== undefined
                                             ? JSON.parse(item.options)[selectedAnswers[item.id]]
                                             : 'Chưa chọn'}
                                     </Text>
@@ -191,10 +186,7 @@ const ExamScreen = () => {
                             >
                                 <Text style={styles.modalButtonText}>Hủy</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.modalButton}
-                                onPress={confirmSubmit}
-                            >
+                            <TouchableOpacity style={styles.modalButton} onPress={confirmSubmit}>
                                 <Text style={styles.modalButtonText}>Xác Nhận</Text>
                             </TouchableOpacity>
                         </View>
@@ -205,6 +197,7 @@ const ExamScreen = () => {
     );
 };
 
+// Styles giữ nguyên như cũ
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     header: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
@@ -218,27 +211,14 @@ const styles = StyleSheet.create({
     navButton: { paddingVertical: 10, paddingHorizontal: 20, backgroundColor: '#007AFF', borderRadius: 8 },
     disabledNavButton: { backgroundColor: '#ccc' },
     navButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    questionListContainer: { paddingVertical: 10, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#ccc' },
-    questionListButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, backgroundColor: '#ccc' },
-    activeQuestionListButton: { backgroundColor: '#007AFF' },
-    questionListButtonText: { color: '#fff', fontWeight: 'bold' },
-    submitContainer: { padding: 15, backgroundColor: '#fff', alignItems: 'center' },
     submitButton: { backgroundColor: '#28A745', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
-    disabledSubmitButton: { backgroundColor: '#ccc' },
     submitButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
     modalContent: { width: '90%', backgroundColor: '#fff', borderRadius: 8, padding: 20, maxHeight: '80%' },
-    modalList: { marginBottom: 15 },
-    modalItem: { flex: 1, margin: 5, padding: 10, backgroundColor: '#f9f9f9', borderRadius: 8, borderWidth: 1, borderColor: '#ddd' },
-    modalQuestion: { fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
-    modalAnswer: { fontSize: 12, color: '#333' },
-    modalActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 },
-    modalButton: { backgroundColor: '#007AFF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
-    modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
-    questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 15, },
-    questionScroll: { maxHeight: 320, marginBottom: 15, },
-    questionScrollContent: { paddingBottom: 10, },
+    questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 15 },
+    questionScroll: { maxHeight: 320, marginBottom: 15 },
+    questionScrollContent: { paddingBottom: 10 },
     modalQuestionContainer: {
         marginBottom: 15,
         padding: 10,
@@ -249,6 +229,9 @@ const styles = StyleSheet.create({
     },
     modalQuestionText: { fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
     modalAnswerText: { fontSize: 14, color: '#333' },
+    modalActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 },
+    modalButton: { backgroundColor: '#007AFF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
+    modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
 
 export default ExamScreen;
