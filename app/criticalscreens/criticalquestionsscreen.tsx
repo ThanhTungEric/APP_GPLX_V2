@@ -63,12 +63,7 @@ const CriticalQuestionsScreen = () => {
                         disabled={selectedAnswer !== null} // Disable selection after an answer is chosen
                     >
                         <View style={styles.optionRow}>
-                            <View style={[
-                                styles.checkbox,
-                                selectedAnswer === index && { backgroundColor: selectedAnswer === currentQuestion.correctAnswerIndex ? '#00C853' : '#FF3D00' }
-                            ]}>
-                                {selectedAnswer === index && <Text style={styles.checkboxTick}>✓</Text>}
-                            </View>
+
                             <Text style={styles.optionText}>
                                 {option}
                             </Text>
@@ -87,7 +82,7 @@ const CriticalQuestionsScreen = () => {
                     onPress={handlePreviousQuestion}
                     disabled={currentQuestionIndex === 0}
                 >
-                    <Text style={styles.navButtonText}>Câu Trước</Text>
+                    <Text style={styles.navButtonText}>Trước</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[
@@ -97,7 +92,7 @@ const CriticalQuestionsScreen = () => {
                     onPress={handleNextQuestion}
                     disabled={currentQuestionIndex === questions.length - 1}
                 >
-                    <Text style={styles.navButtonText}>Câu Tiếp</Text>
+                    <Text style={styles.navButtonText}>Sau</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -113,7 +108,7 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: '#F4F4F4',
         borderRadius: 5,
-        marginBottom: 15,
+        marginBottom: 5,
     },
     optionRow: {
         flexDirection: 'row',
@@ -164,9 +159,9 @@ const styles = StyleSheet.create({
     nextButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     endText: { marginTop: 20, fontSize: 16, fontWeight: 'bold', textAlign: 'center', color: '#333' },
     navigationContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, backgroundColor: 'transparent' },
-    navButton: { paddingVertical: 10, paddingHorizontal: 20, backgroundColor: '#007AFF', borderRadius: 8 },
+    navButton: { flex: 1, paddingVertical: 12, paddingHorizontal: 15, backgroundColor: '#007AFF', borderRadius: 5, marginHorizontal: 5, alignItems: 'center' },
     disabledNavButton: { backgroundColor: '#ccc' },
-    navButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    navButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 
 });
 

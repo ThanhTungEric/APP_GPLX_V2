@@ -61,3 +61,24 @@ export async function getCriticalQuestions(): Promise<Question[]> {
     'SELECT * FROM questions WHERE isCritical = 1'
   );
 }
+
+export async function getQuestionCountsByChapterAndLicense(): Promise<{ chapterId: number; licenseId: number; questionCount: number }[]> {
+  const db = await openDatabase();
+  return db.getAllAsync<{ chapterId: number; licenseId: number; questionCount: number }>(
+    `SELECT q.chapterId, ql.licenseId, COUNT(*) as questionCount
+     FROM questions q
+     JOIN question_licenses ql ON q.id = ql.questionId
+     GROUP BY q.chapterId, ql.licenseId`
+  );
+}
+
+export async function getQuestionsByChapterAndLicense(chapterId: number, licenseId: number): Promise<Question[]> {
+  const db = await openDatabase();
+  return db.getAllAsync<Question>(
+    `SELECT q.* FROM questions q
+     JOIN question_licenses ql ON q.id = ql.questionId
+     WHERE q.chapterId = ? AND ql.licenseId = ?`,
+    chapterId,
+    licenseId
+  );
+}

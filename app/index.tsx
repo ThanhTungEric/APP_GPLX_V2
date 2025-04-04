@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
 import { createTables, checkVersion, getVersion } from './database/database';
 import { getAllChapters } from './database/chapter';
-import { getQuestionCountsByChapter } from './database/questions';
+import { getQuestionCountsByChapter, getQuestionCountsByChapterAndLicense } from './database/questions';
 
 const Index = () => {
 
@@ -128,9 +128,11 @@ const StudyTopics = () => {
       try {
         const chapters = await getAllChapters();
         const questionCounts = await getQuestionCountsByChapter();
+        const questionCountWithChapterIdAndLicenseId = await getQuestionCountsByChapterAndLicense();
+        console.log('questionCountWithChapterIdAndLicenseId', questionCountWithChapterIdAndLicenseId);
 
         const chaptersWithCounts = chapters.map((chapter) => {
-          const countData = questionCounts.find((q) => q.chapterId === chapter.id);
+          const countData = questionCountWithChapterIdAndLicenseId.find((q) => q.chapterId === chapter.id);
           return { ...chapter, questionCount: countData?.questionCount || 0 };
         });
 
@@ -143,7 +145,8 @@ const StudyTopics = () => {
   }, []);
 
   const handleTopicPress = (id: number, name: string) => {
-    router.push({ pathname: '/studyscreen', params: { id, title: name } });
+    const licenseId = 1;
+    router.push({ pathname: '/studyscreen', params: { id, title: name, licenseId } });
   };
 
   return (
@@ -162,7 +165,6 @@ const StudyTopics = () => {
           </View>
         </TouchableOpacity>
       ))}
-
     </View>
   );
 };
