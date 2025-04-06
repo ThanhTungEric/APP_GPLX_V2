@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-    summaryContainer: { marginBottom: 20, textAlign: 'center', alignItems: 'center' },
+    summaryContainer: { marginBottom: 5, textAlign: 'center', alignItems: 'center' },
     summaryText: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
     summaryCorrect: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'green' },
     summaryWrong: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'red' },

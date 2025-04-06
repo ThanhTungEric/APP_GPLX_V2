@@ -11,7 +11,7 @@ const BottomNavigation = () => {
                 <Icon name="book" size={20} color="#007AFF" />
                 <Text style={styles.navText}>Ôn thi GPLX</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.navButton}>
+            <TouchableOpacity style={styles.navButton} onPress={() => router.push("/training/TrainingScreen")}>
                 <Icon name="star" size={20} color="#007AFF" />
                 <Text style={styles.navText}>Đào tạo lái xe</Text>
             </TouchableOpacity>

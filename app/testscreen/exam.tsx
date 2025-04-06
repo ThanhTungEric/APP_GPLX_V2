@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ScrollView, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import { getQuestionsByQuiz } from '../database/quizzes';
+import { getLicenseById } from '../database/licenses';
+import { getCurrentLicenseId } from '../database/history';
+
+type License = {
+    id: number;
+    name: string;
+    description: string;
+    totalQuestions: number;
+    requiredCorrect: number;
+    durationMinutes: number;
+};
 
 const ExamScreen = () => {
     const router = useRouter();
@@ -23,6 +33,43 @@ const ExamScreen = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [licenseInfo, setLicenseInfo] = useState<License | null>(null);
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+
+    useEffect(() => {
+        (async () => {
+            const licenseId = await getCurrentLicenseId();
+            if (licenseId) {
+                const numericId = Number(licenseId);
+                const data = await getLicenseById(numericId) as License;
+                setLicenseInfo(data);
+            }
+        })();
+    }, []);
+    useEffect(() => {
+        if (licenseInfo?.durationMinutes) {
+            const totalSeconds = licenseInfo.durationMinutes * 60;
+            setTimeLeft(totalSeconds);
+        }
+    }, [licenseInfo]);
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+
+        const interval = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    handleSubmit(); // Khi hết giờ, mở modal xác nhận nộp bài
+                    confirmSubmit(); // Tự động xác nhận
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [timeLeft]);
+
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -95,51 +142,61 @@ const ExamScreen = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
-            {/* <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Icon name="arrow-left" size={22} color="#007AFF" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{title}</Text>
-            </View> */}
-
-            {/* Question */}
             {currentQuestion && (
                 <View style={styles.questionContainer}>
-                    <ScrollView style={styles.questionScroll} contentContainerStyle={styles.questionScrollContent}>
-                        <Text style={styles.questionText}>
-                            Câu hỏi {currentQuestionIndex + 1}/{questions.length}:
-                        </Text>
-                        <Text style={styles.questionText}>{currentQuestion.content}</Text>
-                        {currentQuestion.imageName && (
+                    <View style={styles.timerAndStatusRow}>
+                        <View style={styles.timerBox}>
+                            <Text style={styles.timerText}>
+                                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                            </Text>
+                        </View>
+
+                        <View style={styles.questionStatusContainer}>
+                            {questions.map((q, index) => {
+                                const answered = selectedAnswers[q.id] !== undefined;
+                                return (
+                                    <View
+                                        key={q.id}
+                                        style={[
+                                            styles.circle,
+                                            answered ? styles.circleAnswered : styles.circleUnanswered
+                                        ]}
+                                    >
+                                        <Text style={styles.circleText}>{index + 1}</Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+                    <Text style={styles.questionText}>
+                        Câu hỏi {currentQuestionIndex + 1}/{questions.length}:
+                    </Text>
+                    <Text style={styles.questionText}>{currentQuestion.content}</Text>
+                    {currentQuestion.imageName && (
+                        <View style={{ width: '100%', aspectRatio: 4 / 3}}>
                             <Image
                                 source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }}
-                                style={styles.questionImage}
+                                style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
                             />
-                        )}
-                    </ScrollView>
-                    {JSON.parse(currentQuestion.options).map((option: string, index: number) => (
-                        <TouchableOpacity
-                            key={index}
-                            style={[
-                                styles.answerButton,
-                                selectedAnswers[currentQuestion.id] === index && styles.selectedAnswerButton,
-                            ]}
-                            onPress={() => handleAnswerSelect(currentQuestion.id, index)}
-                        >
-                            <View style={styles.optionRow}>
-                                <View style={[
-                                    styles.checkbox,
-                                    selectedAnswers[currentQuestion.id] === index && { backgroundColor: '#007AFF' }
-                                ]}>
-                                    {selectedAnswers[currentQuestion.id] === index && <Text style={styles.checkboxTick}>✓</Text>}
-                                </View>
+                        </View>
+
+                    )}
+                    <ScrollView style={styles.questionScroll} contentContainerStyle={styles.questionScrollContent}>
+                        {JSON.parse(currentQuestion.options).map((option: string, index: number) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={[
+                                    styles.answerButton,
+                                    selectedAnswers[currentQuestion.id] === index && styles.selectedAnswerButton,
+                                ]}
+                                onPress={() => handleAnswerSelect(currentQuestion.id, index)}
+                            >
                                 <Text style={styles.answerText}>
                                     {option}
                                 </Text>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 </View>
             )}
 
@@ -209,11 +266,11 @@ const ExamScreen = () => {
 
 // Styles giữ nguyên như cũ
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#Fff', justifyContent: "space-between" },
     header: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
     headerTitle: { fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
-    questionContainer: { flex: 1, padding: 20 },
-    questionText: { fontSize: 18, fontWeight: 'bold', marginBottom: 20 },
+    questionContainer: { padding: 10 },
+    questionText: { fontSize: 18, fontWeight: 'bold', marginBottom: 3 },
     answerButton: { padding: 10, borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 10, backgroundColor: '#fff' },
     selectedAnswerButton: { backgroundColor: '#E3F2FD', borderColor: '#007AFF' },
     answerText: { fontSize: 16, color: '#333' },
@@ -227,8 +284,8 @@ const styles = StyleSheet.create({
     modalContent: { width: '90%', backgroundColor: '#fff', borderRadius: 8, padding: 20, maxHeight: '80%' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
     questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 15 },
-    questionScroll: { maxHeight: 320, marginBottom: 15 },
-    questionScrollContent: { paddingBottom: 10 },
+    questionScroll: { marginBottom: 15, marginTop: 10 },
+    questionScrollContent: { paddingBottom: 5 },
     modalQuestionContainer: {
         marginBottom: 15,
         padding: 10,
@@ -242,26 +299,53 @@ const styles = StyleSheet.create({
     modalActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 },
     modalButton: { backgroundColor: '#007AFF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
     modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    optionRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    checkbox: {
-        width: 24,
-        height: 24,
-        borderWidth: 2,
-        borderColor: '#333',
-        marginRight: 10,
+    timerBox: {
+        backgroundColor: '#FFEFD5',
+        paddingVertical: 5,
+        paddingHorizontal: 5,
+        width: 60,
+        alignSelf: 'center',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 4, // Rounded corners for better visibility
+        borderRadius: 8,
     },
-    checkboxTick: {
-        color: '#fff',
+    timerText: {
         fontSize: 16,
-        fontWeight: 'bold',
+        color: '#dc3545',
+        fontWeight: '500',
     },
+    timerAndStatusRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginBottom: 10,
+    },
+    questionStatusContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        flex: 1,
+    },
+    circle: {
+        width: 20,
+        height: 20,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    circleAnswered: {
+        backgroundColor: '#007AFF',
+    },
+    circleUnanswered: {
+        backgroundColor: '#ccc',
+    },
+    circleText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 13,
+    },
+
 
 });
 
