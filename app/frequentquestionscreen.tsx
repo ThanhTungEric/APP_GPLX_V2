@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, PanResponder, Animated } from 'react-native';
 
 const FrequentQuestionScreen = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+    const translateX = useRef(new Animated.Value(0)).current;
 
     const questions = [
         {
@@ -36,56 +37,79 @@ const FrequentQuestionScreen = () => {
         setSelectedAnswers({ ...selectedAnswers, [questionId]: answerId });
     };
 
-    const handleNextQuestion = () => {
-        if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
+    const handleSwipe = (direction: 'left' | 'right') => {
+        const newIndex =
+            direction === 'left'
+                ? Math.min(currentQuestionIndex + 1, questions.length - 1)
+                : Math.max(currentQuestionIndex - 1, 0);
+
+        if (newIndex !== currentQuestionIndex) {
+            Animated.timing(translateX, {
+                toValue: direction === 'left' ? -300 : 300,
+                duration: 200,
+                useNativeDriver: true,
+            }).start(() => {
+                setCurrentQuestionIndex(newIndex);
+                translateX.setValue(direction === 'left' ? 300 : -300);
+                Animated.timing(translateX, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+            });
         }
     };
 
-    const handlePreviousQuestion = () => {
-        if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(currentQuestionIndex - 1);
-        }
-    };
+    const panResponder = PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
+        onPanResponderRelease: (_, gestureState) => {
+            if (gestureState.dx < -50) {
+                handleSwipe('left');
+            } else if (gestureState.dx > 50) {
+                handleSwipe('right');
+            }
+        },
+    });
 
     const currentQuestion = questions[currentQuestionIndex];
 
     return (
-        <View style={styles.container}>
-            {/* Question */}
-            <ScrollView style={styles.questionContainer}>
-                <Text style={styles.questionText}>{currentQuestion.question}</Text>
-                {currentQuestion.image && (
-                    <Image source={{ uri: currentQuestion.image }} style={styles.questionImage} />
-                )}
-                {currentQuestion.answers.map((answer) => (
-                    <TouchableOpacity
-                        key={answer.id}
-                        style={[
-                            styles.answerButton,
-                            selectedAnswers[currentQuestion.id] === answer.id && {
-                                backgroundColor: answer.id === currentQuestion.correct ? "#00C853" : "#FF3D00",
-                            },
-                        ]}
-                        onPress={() => handleAnswerSelect(currentQuestion.id, answer.id)}
-                    >
-                        <Text style={styles.answerText}>{answer.text}</Text>
-                    </TouchableOpacity>
-                ))}
-                {selectedAnswers[currentQuestion.id] && (
-                    <Text style={styles.resultText}>
-                        {selectedAnswers[currentQuestion.id] === currentQuestion.correct
-                            ? "Đúng"
-                            : `Sai, đáp án đúng: ${currentQuestion.correct}`}
-                    </Text>
-                )}
-            </ScrollView>
+        <View style={styles.container} {...panResponder.panHandlers}>
+            <Animated.View style={[styles.questionContainer, { transform: [{ translateX }] }]}>
+                <ScrollView>
+                    <Text style={styles.questionText}>{currentQuestion.question}</Text>
+                    {currentQuestion.image && (
+                        <Image source={{ uri: currentQuestion.image }} style={styles.questionImage} />
+                    )}
+                    {currentQuestion.answers.map((answer) => (
+                        <TouchableOpacity
+                            key={answer.id}
+                            style={[
+                                styles.answerButton,
+                                selectedAnswers[currentQuestion.id] === answer.id && {
+                                    backgroundColor: answer.id === currentQuestion.correct ? "#00C853" : "#FF3D00",
+                                },
+                            ]}
+                            onPress={() => handleAnswerSelect(currentQuestion.id, answer.id)}
+                        >
+                            <Text style={styles.answerText}>{answer.text}</Text>
+                        </TouchableOpacity>
+                    ))}
+                    {selectedAnswers[currentQuestion.id] && (
+                        <Text style={styles.resultText}>
+                            {selectedAnswers[currentQuestion.id] === currentQuestion.correct
+                                ? "Đúng"
+                                : `Sai, đáp án đúng: ${currentQuestion.correct}`}
+                        </Text>
+                    )}
+                </ScrollView>
+            </Animated.View>
 
             {/* Navigation */}
             <View style={styles.navigationContainer}>
                 <TouchableOpacity
                     style={[styles.navButton, currentQuestionIndex === 0 && styles.disabledNavButton]}
-                    onPress={handlePreviousQuestion}
+                    onPress={() => handleSwipe('right')}
                     disabled={currentQuestionIndex === 0}
                 >
                     <Text style={styles.navButtonText}>Câu Trước</Text>
@@ -95,7 +119,7 @@ const FrequentQuestionScreen = () => {
                         styles.navButton,
                         currentQuestionIndex === questions.length - 1 && styles.disabledNavButton
                     ]}
-                    onPress={handleNextQuestion}
+                    onPress={() => handleSwipe('left')}
                     disabled={currentQuestionIndex === questions.length - 1}
                 >
                     <Text style={styles.navButtonText}>Câu Tiếp</Text>

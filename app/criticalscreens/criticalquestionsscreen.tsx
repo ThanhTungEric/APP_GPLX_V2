@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Animated } from 'react-native';
 import { getCriticalQuestions, Question } from '../database/questions';
 
 const CriticalQuestionsScreen = () => {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+    const translateX = useState(new Animated.Value(0))[0];
+    const [isSwiping, setIsSwiping] = useState(false);
 
     useEffect(() => {
         async function fetchCriticalQuestions() {
             try {
                 const data = await getCriticalQuestions();
-                setQuestions(data);
+                if (data && data.length > 0) {
+                    setQuestions(data);
+                } else {
+                    console.error('No critical questions found.');
+                }
             } catch (error) {
                 console.error('Error fetching critical questions:', error);
             }
@@ -33,6 +39,51 @@ const CriticalQuestionsScreen = () => {
         setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
     };
 
+    const panResponder = PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20 && !isSwiping, // Detect horizontal swipe
+        onPanResponderGrant: () => setIsSwiping(true),
+        onPanResponderMove: (_, gestureState) => {
+            translateX.setValue(gestureState.dx); // Update translateX based on swipe distance
+        },
+        onPanResponderRelease: (_, gestureState) => {
+            const threshold = 100; // Minimum swipe distance to trigger navigation
+            if (gestureState.dx > threshold && currentQuestionIndex > 0) {
+                // Swipe right to go to the previous question
+                Animated.timing(translateX, {
+                    toValue: 500,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start(() => {
+                    setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
+                    translateX.setValue(-500); // Reset translateX for the next animation
+                    Animated.timing(translateX, {
+                        toValue: 0,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start(() => setIsSwiping(false));
+                });
+            } else if (gestureState.dx < -threshold && currentQuestionIndex < questions.length - 1) {
+                // Swipe left to go to the next question
+                Animated.timing(translateX, {
+                    toValue: -500,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start(() => {
+                    setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+                    translateX.setValue(500); // Reset translateX for the next animation
+                    Animated.timing(translateX, {
+                        toValue: 0,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start(() => setIsSwiping(false));
+                });
+            } else {
+                // If swipe distance is below the threshold, reset translateX
+                Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start(() => setIsSwiping(false));
+            }
+        },
+    });
+
     if (questions.length === 0) {
         return (
             <View style={styles.container}>
@@ -42,39 +93,37 @@ const CriticalQuestionsScreen = () => {
     }
 
     const currentQuestion = questions[currentQuestionIndex];
-    const options = JSON.parse(currentQuestion.options) as string[]; // Assuming options are stored as a JSON string
+    const options = JSON.parse(currentQuestion.options) as string[];
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Câu Hỏi Điểm Liệt</Text>
-            <View style={styles.questionCard}>
-                <Text style={styles.questionText}>
-                    {currentQuestion.number}. {currentQuestion.content}
-                </Text>
-                {options.map((option, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={[
-                            styles.optionButton,
-                            selectedAnswer !== null && index === currentQuestion.correctAnswerIndex && { backgroundColor: '#E8F5E9' },
-                            selectedAnswer !== null && selectedAnswer !== currentQuestion.correctAnswerIndex && selectedAnswer === index && { backgroundColor: '#FFEBEE' },
-                        ]}
-                        onPress={() => handleAnswerSelect(index)}
-                        disabled={selectedAnswer !== null} // Disable selection after an answer is chosen
-                    >
-                        <View style={styles.optionRow}>
-
-                            <Text style={styles.optionText}>
-                                {option}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                ))}
-            </View>
-            {currentQuestionIndex === questions.length - 1 && (
-                <Text style={styles.endText}>Bạn đã hoàn thành tất cả câu hỏi!</Text>
-            )}
-
+        <View style={styles.container} {...panResponder.panHandlers}>
+            <Animated.View style={{ transform: [{ translateX }] }}>
+                <Text style={styles.title}>Câu Hỏi Điểm Liệt</Text>
+                <View style={styles.questionCard}>
+                    <Text style={styles.questionText}>
+                        {currentQuestion.number}. {currentQuestion.content}
+                    </Text>
+                    {options.map((option, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={[
+                                styles.optionButton,
+                                selectedAnswer !== null && index === currentQuestion.correctAnswerIndex && { backgroundColor: '#E8F5E9' },
+                                selectedAnswer !== null && selectedAnswer !== currentQuestion.correctAnswerIndex && selectedAnswer === index && { backgroundColor: '#FFEBEE' },
+                            ]}
+                            onPress={() => handleAnswerSelect(index)}
+                            disabled={selectedAnswer !== null}
+                        >
+                            <View style={styles.optionRow}>
+                                <Text style={styles.optionText}>{option}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+                {currentQuestionIndex === questions.length - 1 && (
+                    <Text style={styles.endText}>Bạn đã hoàn thành tất cả câu hỏi!</Text>
+                )}
+            </Animated.View>
             <View style={{ flex: 1 }} />
             <View style={styles.navigationContainer}>
                 <TouchableOpacity
@@ -87,7 +136,7 @@ const CriticalQuestionsScreen = () => {
                 <TouchableOpacity
                     style={[
                         styles.navButton,
-                        currentQuestionIndex === questions.length - 1 && styles.disabledNavButton
+                        currentQuestionIndex === questions.length - 1 && styles.disabledNavButton,
                     ]}
                     onPress={handleNextQuestion}
                     disabled={currentQuestionIndex === questions.length - 1}
