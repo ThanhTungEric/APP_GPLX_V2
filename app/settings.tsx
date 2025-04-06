@@ -1,17 +1,28 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef,useEffect } from "react";
 import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { setGradingMode, getGradingMode } from "./database/history";
+import { setGradingMode, getGradingMode , getCurrentLicense } from "./database/history";
 import { resetDatabase } from "./database/database";
-
 const SettingsScreen = () => {
     const router = useRouter();
     const [isVibrationEnabled, setVibrationEnabled] = useState(true);
     const [selectedMode, setSelectedMode] = useState("after_submit");
     const [selectedTheme, setSelectedTheme] = useState("Tự động");
+    const [currentLicenseName, setCurrentLicenseName] = useState<string | null>(null);
+    useEffect(() => {
+        const fetchCurrentLicense = async () => {
+            try {
+                const licenseName = await getCurrentLicense();
+                setCurrentLicenseName(licenseName)
+            } catch (error) {
+                console.error("Error fetching current license:", error);
+            }
+        };
 
+        fetchCurrentLicense();
+    }, []);
     const themes = ["Tự động", "Sáng", "Tối"];
     const translateX = useRef(new Animated.Value(0)).current;
 
@@ -49,7 +60,7 @@ const SettingsScreen = () => {
                     <Text style={styles.sectionTitle}>LOẠI GPLX - BẰNG LÁI</Text>
                     <TouchableOpacity style={styles.settingItem} onPress={() => router.push("/select-gplx")}>
                         <Text>GPLX</Text>
-                        <Text style={styles.option}>C1</Text>
+                        <Text style={styles.option}>{currentLicenseName}</Text>
                     </TouchableOpacity>
 
                     <Text style={styles.sectionTitle}>CHẾ ĐỘ CHẤM ĐIỂM BÀI THI</Text>
