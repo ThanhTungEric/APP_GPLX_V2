@@ -106,6 +106,14 @@ export async function createTables() {
       questionId INTEGER NOT NULL,
       answer TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS frequentmistakes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      questionId INTEGER NOT NULL UNIQUE,
+      mistakeCount INTEGER DEFAULT 1,
+      lastMistakeTimestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (questionId) REFERENCES questions(id)
+    );
   `);
 }
 
@@ -154,7 +162,7 @@ export async function resetDatabase() {
     DROP TABLE IF EXISTS quizzes;
     DROP TABLE IF EXISTS version;
     DROP TABLE IF EXISTS quizesshistory;
-
+    DROP TABLE IF EXISTS frequentmistakes; 
   `);
   console.log('🗑️ Đã xóa tất cả dữ liệu!');
   await createTables();
@@ -203,7 +211,7 @@ export async function updateDataFromAPI() {
           license.durationMinutes
         );
       }
-      
+
 
       for (const q of questionsRes.data) {
         await db.runAsync(

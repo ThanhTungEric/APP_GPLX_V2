@@ -1,9 +1,9 @@
-import React, { useState, useRef,useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { setGradingMode, getGradingMode , getCurrentLicense } from "./database/history";
+import { setGradingMode, getGradingMode, getCurrentLicense } from "./database/history";
 import { resetDatabase } from "./database/database";
 const SettingsScreen = () => {
     const router = useRouter();

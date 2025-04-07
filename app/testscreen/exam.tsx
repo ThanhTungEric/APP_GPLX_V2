@@ -173,50 +173,66 @@ const ExamScreen = () => {
     const currentQuestion = questions[currentQuestionIndex];
 
     return (
-        <View style={styles.container} {...panResponder.panHandlers}>
-            <Animated.View style={{ transform: [{ translateX }], opacity: fadeAnim }}>
-                {currentQuestion && (
-                    <View style={styles.questionContainer}>
-                        <View style={styles.timerAndStatusRow}>
-                            <View style={styles.timerBox}>
-                                <Text style={styles.timerText}>
-                                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                                </Text>
-                            </View>
+        <View style={styles.container}>
+            {/* Timer and Status Row */}
+            <View style={styles.timerAndStatusRow}>
+                <View style={styles.timerBox}>
+                    <Text style={styles.timerText}>
+                        {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    </Text>
+                </View>
 
-                            <View style={styles.questionStatusContainer}>
-                                {questions.map((q, index) => {
-                                    const answered = selectedAnswers[q.id] !== undefined;
-                                    const isCurrent = index === currentQuestionIndex;
-                                    return (
-                                        <View
-                                            key={q.id}
-                                            style={[
-                                                styles.circle,
-                                                answered ? styles.circleAnswered : styles.circleUnanswered,
-                                                isCurrent && styles.circleCurrent,
-                                            ]}
-                                        >
-                                            <Text style={styles.circleText}>{index + 1}</Text>
-                                        </View>
-                                    );
-                                })}
+                <View style={styles.questionStatusContainer}>
+                    {questions.map((q, index) => {
+                        const answered = selectedAnswers[q.id] !== undefined;
+                        const isCurrent = index === currentQuestionIndex;
+                        return (
+                            <View
+                                key={q.id}
+                                style={[
+                                    styles.circle,
+                                    answered ? styles.circleAnswered : styles.circleUnanswered,
+                                    isCurrent && styles.circleCurrent,
+                                ]}
+                            >
+                                <Text style={styles.circleText}>{index + 1}</Text>
                             </View>
-                        </View>
+                        );
+                    })}
+                </View>
+            </View>
+
+            {/* Swipeable Question Content */}
+            <Animated.View
+                {...panResponder.panHandlers} // Apply panResponder here
+                style={[styles.questionContainer, { transform: [{ translateX }], opacity: fadeAnim }]}
+            >
+                {currentQuestion && (
+                    <View>
                         <Text style={styles.questionText}>
                             Câu hỏi {currentQuestionIndex + 1}/{questions.length}:
                         </Text>
                         <Text style={styles.questionText}>{currentQuestion.content}</Text>
                         {currentQuestion.imageName && (
                             <View style={{ width: '100%', aspectRatio: 4 / 3 }}>
-                                <Image source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }} style={{ width: '100%', height: '100%', resizeMode: 'contain' }} />
+                                <Image
+                                    source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }}
+                                    style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
+                                />
                             </View>
                         )}
-                        <ScrollView style={styles.questionScroll} contentContainerStyle={styles.questionScrollContent}>
+                        <ScrollView
+                            style={styles.questionScroll}
+                            contentContainerStyle={styles.questionScrollContent}
+                        >
                             {JSON.parse(currentQuestion.options).map((option: string, index: number) => (
                                 <TouchableOpacity
                                     key={index}
-                                    style={[styles.answerButton, selectedAnswers[currentQuestion.id] === index && styles.selectedAnswerButton,]}
+                                    style={[
+                                        styles.answerButton,
+                                        selectedAnswers[currentQuestion.id] === index &&
+                                        styles.selectedAnswerButton,
+                                    ]}
                                     onPress={() => handleAnswerSelect(currentQuestion.id, index)}
                                 >
                                     <Text style={styles.answerText}> {option} </Text>
@@ -229,7 +245,8 @@ const ExamScreen = () => {
 
             {/* Navigation */}
             <View style={styles.navigationContainer}>
-                <TouchableOpacity style={[styles.navButton, currentQuestionIndex === 0 && styles.disabledNavButton]}
+                <TouchableOpacity
+                    style={[styles.navButton, currentQuestionIndex === 0 && styles.disabledNavButton]}
                     onPress={handlePreviousQuestion}
                     disabled={currentQuestionIndex === 0}
                 >
@@ -238,7 +255,12 @@ const ExamScreen = () => {
                 <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
                     <Text style={styles.submitButtonText}>Nộp Bài</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.navButton, currentQuestionIndex === questions.length - 1 && styles.disabledNavButton,]} onPress={handleNextQuestion}
+                <TouchableOpacity
+                    style={[
+                        styles.navButton,
+                        currentQuestionIndex === questions.length - 1 && styles.disabledNavButton,
+                    ]}
+                    onPress={handleNextQuestion}
                     disabled={currentQuestionIndex === questions.length - 1}
                 >
                     <Text style={styles.navButtonText}>Câu Tiếp</Text>
@@ -281,7 +303,7 @@ const ExamScreen = () => {
 
 // Styles giữ nguyên như cũ
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#Fff', justifyContent: "space-between" },
+    container: { flex: 1, backgroundColor: '#Fff', justifyContent: "space-between", padding: 10 },
     header: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
     headerTitle: { fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
     questionContainer: { padding: 10 },
