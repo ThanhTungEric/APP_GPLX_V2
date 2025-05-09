@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getQuestionsByChapter } from './database/questions';
+import { insertSavedQuestion, getSavedQuestionByQuestionId } from "./database/savequestion";
 
-import {insertSavedQuestion, getSavedQuestionByQuestionId} from "./database/savequestion";
 const StudyScreen = () => {
     const router = useRouter();
     const { id, title } = useLocalSearchParams();
+
     // Define the Question type
     type Question = {
         id: number;
         content: string;
         options: string; // Options as a JSON string
-        correctAnswerIndex: number; // Index of the correct answer
-        imageName?: string; // Optional property for the image name
+        correctAnswerIndex: number;
+        imageName?: string;
+        explain?: string; // Thêm trường explain
     };
 
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -35,35 +37,36 @@ const StudyScreen = () => {
     const handlePrevious = () => {
         if (currentIndex > 0) {
             setCurrentIndex(currentIndex - 1);
-            setSelectedOption(null); // Reset lựa chọn khi quay lại câu hỏi trước
+            setSelectedOption(null);
         }
     };
 
     const handleNext = () => {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
-            setSelectedOption(null); // Reset lựa chọn khi chuyển sang câu hỏi mới
+            setSelectedOption(null);
         }
     };
 
     const handleOptionSelect = (index: number) => {
-        setSelectedOption(index); // Lưu lại đáp án được chọn
+        setSelectedOption(index);
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{title}</Text>
             {questions.length > 0 ? (
-                <View style={styles.questionContainer}>
+                <ScrollView style={styles.questionContainer}>
                     <Text style={styles.questionContent}>Câu {currentIndex + 1}: {questions[currentIndex].content}</Text>
-                    <View style={styles.optionsContainer}>
-                        {questions[currentIndex].imageName && (
-                            <Image
-                                source={{ uri: `https://daotaolaixebd.com/app/uploads/${questions[currentIndex].imageName}` }}
-                                style={styles.questionImage}
-                            />
-                        )}
 
+                    {questions[currentIndex].imageName && (
+                        <Image
+                            source={{ uri: `https://daotaolaixebd.com/app/uploads/${questions[currentIndex].imageName}` }}
+                            style={styles.questionImage}
+                        />
+                    )}
+
+                    <View style={styles.optionsContainer}>
                         {JSON.parse(questions[currentIndex].options).map((option: string, index: number) => (
                             <TouchableOpacity
                                 key={index}
@@ -73,13 +76,21 @@ const StudyScreen = () => {
                                     selectedOption !== null && index === selectedOption && index !== questions[currentIndex].correctAnswerIndex && styles.incorrectOption,
                                 ]}
                                 onPress={() => handleOptionSelect(index)}
-                                disabled={selectedOption !== null} // Chỉ cho phép chọn một lần
+                                disabled={selectedOption !== null}
                             >
                                 <Text style={styles.optionText}>{index + 1}. {option}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
-                </View>
+
+                    {/* ✅ Hiển thị giải thích sau khi chọn đáp án */}
+                    {selectedOption !== null && questions[currentIndex].explain && (
+                        <View style={styles.explainContainer}>
+                            <Text style={styles.explainTitle}>Giải thích:</Text>
+                            <Text style={styles.explainText}>{questions[currentIndex].explain}</Text>
+                        </View>
+                    )}
+                </ScrollView>
             ) : (
                 <Text>Không có câu hỏi nào.</Text>
             )}
@@ -109,21 +120,36 @@ const styles = StyleSheet.create({
     container: { flex: 1, padding: 10, backgroundColor: '#F8F9FA' },
     title: { fontSize: 20, fontWeight: 'bold', marginBottom: 5, textAlign: "center" },
     questionContainer: { flex: 1, marginBottom: 20, padding: 5, backgroundColor: 'transparent', borderRadius: 10 },
-    questionNumber: { fontWeight: 'bold', marginBottom: 5, fontSize: 17 },
     questionContent: { fontSize: 17, marginBottom: 10 },
     optionsContainer: { marginTop: 10 },
     option: { marginBottom: 5, padding: 10, backgroundColor: '#F4F4F4', borderRadius: 5 },
-    optionText: {fontSize: 16.5},
-    correctOption: { backgroundColor: '#D4EDDA', color: '#155724', fontWeight: 'bold' },
-    incorrectOption: { backgroundColor: '#F8D7DA', color: '#721C24', fontWeight: 'bold' },
+    optionText: { fontSize: 16.5 },
+    correctOption: { backgroundColor: '#D4EDDA' },
+    incorrectOption: { backgroundColor: '#F8D7DA' },
     navigationContainer: { justifyContent: 'flex-end', marginBottom: 10 },
     navigationButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
     navButton: { padding: 15, backgroundColor: '#007AFF', borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5 },
     disabledButton: { backgroundColor: '#ccc' },
     navButtonText: { color: '#fff', fontWeight: 'bold' },
-    backButton: { marginTop: 20, padding: 15, backgroundColor: '#007AFF', borderRadius: 10, alignItems: 'center' },
-    backButtonText: { color: '#fff', fontWeight: 'bold' },
     questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 10 },
+    // ✅ Thêm style cho phần giải thích
+    explainContainer: {
+        marginTop: 15,
+        padding: 10,
+        backgroundColor: '#FFF3CD',
+        borderRadius: 5,
+        borderLeftWidth: 5,
+        borderLeftColor: '#FFEEBA',
+    },
+    explainTitle: {
+        fontWeight: 'bold',
+        marginBottom: 5,
+        fontSize: 16,
+    },
+    explainText: {
+        fontSize: 15.5,
+        lineHeight: 22,
+    },
 });
 
 export default StudyScreen;

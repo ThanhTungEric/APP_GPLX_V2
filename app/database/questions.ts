@@ -9,6 +9,7 @@ export interface Question {
   number: number;
   imageName: string;
   chapterId: number;
+  explain?: string;
 }
 
 export interface License_Question {

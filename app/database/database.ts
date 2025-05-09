@@ -65,6 +65,7 @@ export async function createTables() {
       number INTEGER,
       imageName TEXT,
       chapterId INTEGER,
+      explain TEXT,
       FOREIGN KEY (chapterId) REFERENCES chapters(id)
     );
 
@@ -121,6 +122,8 @@ export async function checkVersion() {
     console.log('🔍 Phiên bản mới nhất ở server:', response.data.version);
     const newVersion = response.data.version;
     if (newVersion !== versionInDB) {
+      //reset database
+      await resetDatabase();
       await updateDataFromAPI();
     } else {
       console.log('👍 Dữ liệu đã là mới nhất!');
@@ -207,8 +210,8 @@ export async function updateDataFromAPI() {
 
       for (const q of questionsRes.data) {
         await db.runAsync(
-          `INSERT INTO questions (id, content, options, correctAnswerIndex, isCritical, number, imageName, chapterId)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO questions (id, content, options, correctAnswerIndex, isCritical, number, imageName, chapterId, explain)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           q.id,
           q.content,
           JSON.stringify(q.options),
@@ -216,7 +219,8 @@ export async function updateDataFromAPI() {
           q.isCritical,
           q.number,
           q.imageName,
-          q.chapter.id
+          q.chapter.id,
+          q.explain
         );
 
 
