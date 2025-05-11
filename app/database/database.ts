@@ -147,9 +147,7 @@ export async function resetDatabase() {
     DROP TABLE IF EXISTS quizzes;
     DROP TABLE IF EXISTS version;
     DROP TABLE IF EXISTS quizesshistory;
-    DROP TABLE IF EXISTS quiz_questions;
-    DROP TABLE IF EXISTS save_question;
-    DROP TABLE IF EXISTS history_question;
+
   `);
   console.log('🗑️ Đã xóa tất cả dữ liệu!');
   await createTables();
@@ -198,7 +196,7 @@ export async function updateDataFromAPI() {
           license.durationMinutes
         );
       }
-      
+
 
       for (const q of questionsRes.data) {
         await db.runAsync(

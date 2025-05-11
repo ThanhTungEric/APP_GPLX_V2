@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { saveQuizHistory } from '../database/quizesshistory';
 import { getLicenseById } from '../database/licenses';
 import { getCurrentLicenseId } from '../database/history';
+import { saveFrequentMistake } from '../database/frequentmistakes';
 
 type License = {
     id: number;
@@ -78,6 +79,17 @@ const ResultScreen = () => {
         };
         saveResult();
     }, [licenseInfo, quizId, correctAnswers, incorrectAnswers, passed]);
+
+    useEffect(() => {
+        const saveMistakes = async () => {
+            const incorrectQuestions = results.filter((item) => !item.isCorrect);
+            for (const question of incorrectQuestions) {
+                console.log('Saving frequent mistake for question:', question.id);
+                await saveFrequentMistake(question.id);
+            }
+        };
+        saveMistakes();
+    }, [results]);
 
     return (
         <View style={styles.container}>

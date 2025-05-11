@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  PanResponder,
+  Animated,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -7,14 +16,13 @@ import { getQuestionsByChapter } from './database/questions';
 import {
   insertSavedQuestion,
   getSavedQuestionByQuestionId,
-  deleteSavedQuestionById
+  deleteSavedQuestionById,
 } from './database/savequestion';
-
 import {
   insertHistoryQuestion,
   updateHistoryQuestion,
   getHistoryByQuestionId,
-  clearAllHistory
+  clearAllHistory,
 } from './database/historyquestion';
 
 const StudyScreen = () => {
@@ -36,11 +44,13 @@ const StudyScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const translateX = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     async function fetchQuestions() {
       try {
-        await clearAllHistory(); // Xóa tất cả
+        await clearAllHistory(); // Xóa lịch sử
         const chapterQuestions = await getQuestionsByChapter(Number(id));
         setQuestions(chapterQuestions);
       } catch (error) {
@@ -55,11 +65,9 @@ const StudyScreen = () => {
       const question = questions[currentIndex];
       if (!question) return;
 
-      // Kiểm tra đã bookmark chưa
       const saved = await getSavedQuestionByQuestionId(question.id);
       setIsSaved(!!saved);
 
-      // Tải lại đáp án đã chọn
       const history = await getHistoryByQuestionId(question.id);
       if (history?.selectedOption !== null && history?.selectedOption !== undefined) {
         setSelectedOption(history.selectedOption);
@@ -67,42 +75,65 @@ const StudyScreen = () => {
         setSelectedOption(null);
       }
     }
-
     checkStatus();
   }, [currentIndex, questions]);
 
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20 && !isSwiping,
+    onPanResponderGrant: () => setIsSwiping(true),
+    onPanResponderMove: (_, gestureState) => {
+      translateX.setValue(gestureState.dx);
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      const threshold = 100;
+      if (gestureState.dx > threshold && currentIndex > 0) {
+        Animated.timing(translateX, {
+          toValue: 500,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          setCurrentIndex((prev) => prev - 1);
+          translateX.setValue(-500);
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => setIsSwiping(false));
+        });
+      } else if (gestureState.dx < -threshold && currentIndex < questions.length - 1) {
+        Animated.timing(translateX, {
+          toValue: -500,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          setCurrentIndex((prev) => prev + 1);
+          translateX.setValue(500);
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => setIsSwiping(false));
+        });
+      } else {
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start(() => setIsSwiping(false));
+      }
+    },
+  });
 
   const handleOptionSelect = async (index: number) => {
     setSelectedOption(index);
     const question = questions[currentIndex];
-
-    try {
-      const existing = await getHistoryByQuestionId(question.id);
-      if (existing) {
-        await updateHistoryQuestion(question.id, index);
-      } else {
-        await insertHistoryQuestion(question.id, index);
-      }
-    } catch (error) {
-      console.error('Error saving to history:', error);
+    const existing = await getHistoryByQuestionId(question.id);
+    if (existing) {
+      await updateHistoryQuestion(question.id, index);
+    } else {
+      await insertHistoryQuestion(question.id, index);
     }
   };
 
   const handleSaveQuestion = async () => {
     const question = questions[currentIndex];
     const existing = await getSavedQuestionByQuestionId(question.id);
-
     if (existing) {
       await deleteSavedQuestionById(existing.id);
       setIsSaved(false);
@@ -113,10 +144,10 @@ const StudyScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       <Text style={styles.title}>{title}</Text>
       {questions.length > 0 ? (
-        <ScrollView style={styles.questionContainer}>
+        <Animated.ScrollView style={[styles.questionContainer, { transform: [{ translateX }] }]}>
           <View style={styles.questionHeader}>
             <Text style={styles.questionContent}>
               Câu {questions[currentIndex].number}: {questions[currentIndex].content}
@@ -160,7 +191,7 @@ const StudyScreen = () => {
               <Text style={styles.explainText}>{questions[currentIndex].explain}</Text>
             </View>
           )}
-        </ScrollView>
+        </Animated.ScrollView>
       ) : (
         <Text>Không có câu hỏi nào.</Text>
       )}
@@ -169,14 +200,14 @@ const StudyScreen = () => {
         <View style={styles.navigationButtons}>
           <TouchableOpacity
             style={[styles.navButton, currentIndex === 0 && styles.disabledButton]}
-            onPress={handlePrevious}
+            onPress={() => setCurrentIndex(currentIndex - 1)}
             disabled={currentIndex === 0}
           >
             <Text style={styles.navButtonText}>Trước</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.navButton, currentIndex === questions.length - 1 && styles.disabledButton]}
-            onPress={handleNext}
+            onPress={() => setCurrentIndex(currentIndex + 1)}
             disabled={currentIndex === questions.length - 1}
           >
             <Text style={styles.navButtonText}>Tiếp</Text>
@@ -189,7 +220,7 @@ const StudyScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10, backgroundColor: '#F8F9FA' },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 5, textAlign: "center" },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 5, textAlign: 'center' },
   questionContainer: { flex: 1, marginBottom: 20, padding: 5, backgroundColor: 'transparent', borderRadius: 10 },
   questionHeader: {
     flexDirection: 'row',
@@ -217,15 +248,8 @@ const styles = StyleSheet.create({
     borderLeftWidth: 5,
     borderLeftColor: '#FFEEBA',
   },
-  explainTitle: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-    fontSize: 16,
-  },
-  explainText: {
-    fontSize: 15.5,
-    lineHeight: 22,
-  },
+  explainTitle: { fontWeight: 'bold', marginBottom: 5, fontSize: 16 },
+  explainText: { fontSize: 15.5, lineHeight: 22 },
 });
 
 export default StudyScreen;
