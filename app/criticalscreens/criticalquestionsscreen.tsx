@@ -56,30 +56,32 @@ const CriticalQuestionsScreen = () => {
     onPanResponderRelease: (_, gestureState) => {
       const threshold = 100;
       if (gestureState.dx > threshold && currentQuestionIndex > 0) {
+        // Animate swipe right
         Animated.timing(translateX, {
           toValue: 500,
           duration: 200,
           useNativeDriver: true,
         }).start(() => {
+          // Sau khi swipe xong mới đổi câu hỏi
           setCurrentQuestionIndex((prev) => prev - 1);
-          translateX.setValue(-500);
+          setSelectedAnswer(null);
+          translateX.setValue(-500); // Đặt lại vị trí ngoài màn hình bên trái
           Animated.timing(translateX, {
             toValue: 0,
             duration: 200,
             useNativeDriver: true,
           }).start(() => setIsSwiping(false));
         });
-      } else if (
-        gestureState.dx < -threshold &&
-        currentQuestionIndex < questions.length - 1
-      ) {
+      } else if (gestureState.dx < -threshold && currentQuestionIndex < questions.length - 1) {
+        // Animate swipe left
         Animated.timing(translateX, {
           toValue: -500,
           duration: 200,
           useNativeDriver: true,
         }).start(() => {
           setCurrentQuestionIndex((prev) => prev + 1);
-          translateX.setValue(500);
+          setSelectedAnswer(null);
+          translateX.setValue(500); // Đặt lại vị trí ngoài màn hình bên phải
           Animated.timing(translateX, {
             toValue: 0,
             duration: 200,
@@ -87,6 +89,7 @@ const CriticalQuestionsScreen = () => {
           }).start(() => setIsSwiping(false));
         });
       } else {
+        // Nếu swipe không đủ ngưỡng, trả về vị trí cũ
         Animated.spring(translateX, {
           toValue: 0,
           useNativeDriver: true,
@@ -94,6 +97,7 @@ const CriticalQuestionsScreen = () => {
       }
     },
   });
+
 
   if (questions.length === 0) {
     return (
@@ -121,14 +125,14 @@ const CriticalQuestionsScreen = () => {
               style={[
                 styles.optionButton,
                 selectedAnswer !== null &&
-                  index === currentQuestion.correctAnswerIndex && {
-                    backgroundColor: '#E8F5E9',
-                  },
+                index === currentQuestion.correctAnswerIndex && {
+                  backgroundColor: '#E8F5E9',
+                },
                 selectedAnswer !== null &&
-                  selectedAnswer !== currentQuestion.correctAnswerIndex &&
-                  selectedAnswer === index && {
-                    backgroundColor: '#FFEBEE',
-                  },
+                selectedAnswer !== currentQuestion.correctAnswerIndex &&
+                selectedAnswer === index && {
+                  backgroundColor: '#FFEBEE',
+                },
               ]}
               onPress={() => handleAnswerSelect(index)}
               disabled={selectedAnswer !== null}
@@ -167,7 +171,7 @@ const CriticalQuestionsScreen = () => {
           style={[
             styles.navButton,
             currentQuestionIndex === questions.length - 1 &&
-              styles.disabledNavButton,
+            styles.disabledNavButton,
           ]}
           onPress={handleNextQuestion}
           disabled={currentQuestionIndex === questions.length - 1}
@@ -184,50 +188,19 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
   questionCard: { padding: 15, backgroundColor: 'transparent', borderRadius: 10, marginBottom: 10 },
   questionText: { fontSize: 17, color: '#333', marginBottom: 10, fontWeight: 'bold' },
-  optionButton: {
-    padding: 10,
-    backgroundColor: '#F4F4F4',
-    borderRadius: 5,
-    marginBottom: 5,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  optionText: {
-    fontSize: 16.5,
-    color: '#333',
-  },
-  navigationContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 15 },
-  navButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    backgroundColor: '#007AFF',
-    borderRadius: 5,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
+  optionButton: { padding: 10, backgroundColor: '#F4F4F4', borderRadius: 5, marginBottom: 5 },
+  optionRow: { flexDirection: 'row', alignItems: 'center' },
+  optionText: { fontSize: 16.5, color: '#333' },
+  navigationContainer: { position: 'absolute', bottom: 20, left: 0, right: 0, flexDirection: 'row', paddingHorizontal: 15, justifyContent: 'space-between', },
+
+  navButton: { padding: 15, backgroundColor: '#007AFF', borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5 },
+
   disabledNavButton: { backgroundColor: '#ccc' },
   navButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   endText: { marginTop: 20, fontSize: 16, fontWeight: 'bold', textAlign: 'center', color: '#333' },
-  explainContainer: {
-    marginTop: 15,
-    padding: 10,
-    backgroundColor: '#FFF3CD',
-    borderRadius: 5,
-    borderLeftWidth: 5,
-    borderLeftColor: '#FFEEBA',
-  },
-  explainTitle: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-    fontSize: 16,
-  },
-  explainText: {
-    fontSize: 15.5,
-    lineHeight: 22,
-  },
+  explainContainer: { marginTop: 15, padding: 10, backgroundColor: '#FFF3CD', borderRadius: 5, borderLeftWidth: 5, borderLeftColor: '#FFEEBA' },
+  explainTitle: { fontWeight: 'bold', marginBottom: 5, fontSize: 16 },
+  explainText: { fontSize: 15.5, lineHeight: 22, },
 });
 
 export default CriticalQuestionsScreen;

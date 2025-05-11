@@ -4,10 +4,10 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
 import { createTables, checkVersion, getVersion } from './database/database';
 import { getAllChapters } from './database/chapter';
-import {getCurrentLicense} from './database/history';
-import { getLicenseIdByName} from './database/licenses';
+import { getCurrentLicense } from './database/history';
+import { getLicenseIdByName } from './database/licenses';
 import { getSavedQuestionCount } from './database/historyquestion';
-import { getQuestionCountsByChapterAndLicense,getTotalQuestionsByLicense   } from './database/questions';
+import { getQuestionCountsByChapterAndLicense, getTotalQuestionsByLicense } from './database/questions';
 
 const Index = () => {
 
@@ -28,11 +28,11 @@ const Index = () => {
       }
     })();
   }, []);
-  
+
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Header router={router} licenses={currentLicense}/>
+      <Header router={router} licenses={currentLicense} />
 
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -174,19 +174,19 @@ const StudyTopics = () => {
           setLicenseId(1);
           return;
         }
-  
+
         setLicenseId(licenseIdNum);
-  
+
         const chapters = await getAllChapters();
         const questionCountWithChapterIdAndLicenseId = await getQuestionCountsByChapterAndLicense();
-  
+
         const chaptersWithCounts = chapters.map((chapter) => {
           const countData = questionCountWithChapterIdAndLicenseId.find(
             (q) => q.chapterId === chapter.id && q.licenseId === licenseIdNum
           );
           return { ...chapter, questionCount: countData?.questionCount || 0 };
         });
-  
+
         setTopics(chaptersWithCounts);
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu chủ đề và câu hỏi:', error);
@@ -194,7 +194,7 @@ const StudyTopics = () => {
     }
     fetchChaptersWithQuestions();
   }, []);
-  
+
 
   const handleTopicPress = (id: number, name: string) => {
     router.push({ pathname: '/studyscreen', params: { id, title: name, licenseId } });
