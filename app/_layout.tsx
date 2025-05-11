@@ -9,7 +9,7 @@ export default function RootLayout() {
   const pathname = usePathname(); // Lấy đường dẫn hiện tại
 
   // Danh sách màn hình không hiển thị BottomNavigation
-  const hiddenScreens = ["/settings", "/questionscreen", "/studyscreen", "/testscreen/exam", "/testscreen", "/testdetailscreen", "/select-gplx", "/testscreen/result", "/testscreen/questiondetails", "/criticalscreens/criticalquestionsscreen"];
+  const hiddenScreens = ["/settings", "/questionscreen", "/studyscreen", "/testscreen/exam", "/testscreen", "/testdetailscreen", "/select-gplx", "/testscreen/result", "/testscreen/questiondetails", "/criticalscreens/criticalquestionsscreen", "/SavedQuestionsScreen"];
 
   return (
     <>
@@ -20,7 +20,6 @@ export default function RootLayout() {
         <Stack.Screen name="information" />
         <Stack.Screen name="testscreen" />
         <Stack.Screen name="signscreen" />
-        <Stack.Screen name="exam" />
         <Stack.Screen name="questionscreen" />
         <Stack.Screen name="frequentquestionscreen" />
       </Stack>

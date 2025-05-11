@@ -3,18 +3,6 @@ import API from './API';
 
 let db: SQLite.SQLiteDatabase | null = null;
 
-interface Question {
-  id: number;
-  content: string;
-  options: string;
-  correctAnswerIndex: number;
-  isCritical: number | boolean;
-  number: number;
-  imageName: string;
-  chapterId: number;
-}
-
-
 export async function openDatabase() {
   if (!db) {
     db = await SQLite.openDatabaseAsync('quiz.db');
@@ -69,6 +57,7 @@ export async function createTables() {
       FOREIGN KEY (chapterId) REFERENCES chapters(id)
     );
 
+    
     CREATE TABLE IF NOT EXISTS question_licenses (
       questionId INTEGER,
       licenseId INTEGER,
@@ -107,6 +96,13 @@ export async function createTables() {
       questionId INTEGER NOT NULL,
       answer TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS history_question (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      questionId INTEGER NOT NULL,
+      selectedOption INTEGER,
+      FOREIGN KEY (questionId) REFERENCES questions(id)
+    );
   `);
 }
 
@@ -119,15 +115,10 @@ export async function checkVersion() {
   const versionInDB = result?.version || null;
   try {
     const response = await API.get('versions/lastest');
-    console.log('🔍 Phiên bản mới nhất ở server:', response.data.version);
     const newVersion = response.data.version;
     if (newVersion !== versionInDB) {
-      //reset database
-      await resetDatabase();
       await updateDataFromAPI();
-    } else {
-      console.log('👍 Dữ liệu đã là mới nhất!');
-    }
+    } 
   } catch (error) {
     console.error("❌ Lỗi khi lấy phiên bản từ API:", error);
   }
@@ -140,7 +131,6 @@ export async function getVersion() {
   const result = await db.getFirstAsync<{ id: number, version: string, createdAt: string, updatedAt: string }>(
     'SELECT * FROM version ORDER BY id DESC LIMIT 1'
   );
-  console.log('📦 Phiên bản:', result);
   return result;
 }
 
@@ -157,7 +147,9 @@ export async function resetDatabase() {
     DROP TABLE IF EXISTS quizzes;
     DROP TABLE IF EXISTS version;
     DROP TABLE IF EXISTS quizesshistory;
-
+    DROP TABLE IF EXISTS quiz_questions;
+    DROP TABLE IF EXISTS save_question;
+    DROP TABLE IF EXISTS history_question;
   `);
   console.log('🗑️ Đã xóa tất cả dữ liệu!');
   await createTables();

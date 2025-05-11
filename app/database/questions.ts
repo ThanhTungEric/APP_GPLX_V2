@@ -38,6 +38,28 @@ export async function getQuestionById(id: number): Promise<Question | null> {
   const db = await openDatabase();
   return db.getFirstAsync<Question>('SELECT * FROM questions WHERE id = ?', id);
 }
+export async function getQuestionsByIds(ids: number[]): Promise<Question[]> {
+  const db = await openDatabase();
+
+  if (ids.length === 0) return [];
+
+  const placeholders = ids.map(() => '?').join(', ');
+  const query = `SELECT * FROM questions WHERE id IN (${placeholders})`;
+
+  return db.getAllAsync<Question>(query, ...ids);
+}
+
+export async function getTotalQuestionsByLicense(licenseId: number): Promise<number> {
+  const db = await openDatabase();
+  const result = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count 
+     FROM questions q
+     JOIN question_licenses ql ON q.id = ql.questionId
+     WHERE ql.licenseId = ?`,
+    licenseId
+  );
+  return result?.count ?? 0;
+}
 
 export async function getQuestionsByChapter(chapterId: number): Promise<Question[]> {
   const db = await openDatabase();

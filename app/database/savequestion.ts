@@ -5,34 +5,34 @@ export interface SavedQuestion {
     answer: string | null;
 }
 export async function insertSavedQuestion(questionId: number): Promise<void> {
-    console.log("vưa án lưu câu hỏi", questionId);
     const db = await openDatabase();
     await db.runAsync(
-        `INSERT INTO saveQuestion (questionId) VALUES (?);`,
+        `INSERT INTO save_question (questionId) VALUES (?);`,
         questionId
     );
-
+    console.log('Inserted saved question with ID:', questionId);
 }
 export async function updateAnswerForQuestion(questionId: number, answer: string): Promise<void> {
     const db = await openDatabase();
     await db.runAsync(
-        `UPDATE saveQuestion SET answer = ? WHERE questionId = ?;`,
+        `UPDATE save_question SET answer = ? WHERE questionId = ?;`,
         answer,
         questionId
     );
 }
+
 export async function deleteSavedQuestionById(id: number): Promise<void> {
     const db = await openDatabase();
-    await db.runAsync(`DELETE FROM saveQuestion WHERE id = ?;`, id);
+    await db.runAsync(`DELETE FROM save_question WHERE id = ?;`, id);
 }
 export async function getAllSavedQuestions(): Promise<SavedQuestion[]> {
     const db = await openDatabase();
-    return db.getAllAsync<SavedQuestion>('SELECT * FROM saveQuestion;');
+    return db.getAllAsync<SavedQuestion>('SELECT * FROM save_question;');
 }
 export async function getSavedQuestionByQuestionId(questionId: number): Promise<SavedQuestion | null> {
     const db = await openDatabase();
     return db.getFirstAsync<SavedQuestion>(
-        'SELECT * FROM saveQuestion WHERE questionId = ?',
+        'SELECT * FROM save_question WHERE questionId = ?',
         questionId
     );
 }

@@ -3,10 +3,24 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-nati
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+import {getVersion} from './database/database';
 const InformationScreen = () => {
   const router = useRouter();
-  const [appVersion, setAppVersion] = useState<string>('');  // Initialize state to hold the version
+  const [appVersion, setAppVersion] = useState<string>('');
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const version = await getVersion();
+        setAppVersion(version?.version || '');
+      } catch (error) {
+        console.error("Error fetching app version:", error);
+      }
+    };
+
+    fetchVersion();
+  }, []);
+
 
   return (
     <View style={styles.container}>
@@ -24,7 +38,7 @@ const InformationScreen = () => {
       {/* ScrollView cho phép cuộn */}
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Phiên bản Pro */}
-        <View style={styles.proBanner}>
+        {/* <View style={styles.proBanner}>
           <Text style={styles.proText}>Phiên bản Pro</Text>
           <View style={styles.discountBadge}>
             <Text style={styles.discountText}>Giảm 30%</Text>
@@ -33,10 +47,10 @@ const InformationScreen = () => {
           <TouchableOpacity style={styles.upgradeButton}>
             <Text style={styles.upgradeText}>NÂNG CẤP</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Danh sách chức năng */}
-        <View style={styles.menuContainer}>
+        {/* <View style={styles.menuContainer}>
           {[
             { icon: "shield", label: "Tra cứu phạt nguội", subLabel: "Nguồn từ Bộ Công an, Cục CSGT" },
             { icon: "list-ol", label: "3 bước ôn thi hiệu quả", subLabel: "Kinh nghiệm để có kết quả ôn thi tốt" },
@@ -60,7 +74,7 @@ const InformationScreen = () => {
               <MaterialCommunityIcons name="chevron-right" size={24} color="#C4C4C4" />
             </TouchableOpacity>
           ))}
-        </View>
+        </View> */}
 
         {/* Phiên bản ứng dụng */}
         <Text style={styles.versionText}>PHIÊN BẢN {appVersion || 'Đang tải...'}</Text>
