@@ -7,9 +7,12 @@ import {
   PanResponder,
   Animated,
 } from 'react-native';
-import { getCriticalQuestions, Question } from '../database/questions';
+import { getCriticalQuestions, Question } from '../../database/questions';
+import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CriticalQuestionsScreen = () => {
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -20,11 +23,7 @@ const CriticalQuestionsScreen = () => {
     async function fetchCriticalQuestions() {
       try {
         const data = await getCriticalQuestions();
-        if (data && data.length > 0) {
-          setQuestions(data);
-        } else {
-          console.error('No critical questions found.');
-        }
+        setQuestions(data || []);
       } catch (error) {
         console.error('Error fetching critical questions:', error);
       }
@@ -37,13 +36,17 @@ const CriticalQuestionsScreen = () => {
   };
 
   const handleNextQuestion = () => {
-    setSelectedAnswer(null);
-    setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+    if (currentQuestionIndex < questions.length - 1) {
+      setSelectedAnswer(null);
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+    }
   };
 
   const handlePreviousQuestion = () => {
-    setSelectedAnswer(null);
-    setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
+    if (currentQuestionIndex > 0) {
+      setSelectedAnswer(null);
+      setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
+    }
   };
 
   const panResponder = PanResponder.create({
@@ -95,21 +98,34 @@ const CriticalQuestionsScreen = () => {
     },
   });
 
+  // ✅ Nếu không có câu hỏi → render header + thông báo
   if (questions.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Đang tải câu hỏi...</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.push('/')}>
+            <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
+          </TouchableOpacity>
+          <Text style={styles.title}>CÂU HỎI ĐIỂM LIỆT</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={styles.title}>Không có câu hỏi điểm liệt nào.</Text>
+        </View>
       </View>
     );
   }
 
   const currentQuestion = questions[currentQuestionIndex];
-  const options = JSON.parse(currentQuestion.options) as string[];
+  const options = JSON.parse(currentQuestion.options ?? '[]') as string[];
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push('/')}>
+          <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
       <Animated.View style={{ transform: [{ translateX }] }}>
-        <Text style={styles.title}>CÂU HỎI ĐIỂM LIỆT</Text>
         <View style={styles.questionCard}>
           <Text style={styles.questionText}>
             {currentQuestion.number}. {currentQuestion.content}
@@ -121,14 +137,14 @@ const CriticalQuestionsScreen = () => {
               style={[
                 styles.optionButton,
                 selectedAnswer !== null &&
-                  index === currentQuestion.correctAnswerIndex && {
-                    backgroundColor: '#E8F5E9',
-                  },
+                index === currentQuestion.correctAnswerIndex && {
+                  backgroundColor: '#E8F5E9',
+                },
                 selectedAnswer !== null &&
-                  selectedAnswer !== currentQuestion.correctAnswerIndex &&
-                  selectedAnswer === index && {
-                    backgroundColor: '#FFEBEE',
-                  },
+                selectedAnswer !== currentQuestion.correctAnswerIndex &&
+                selectedAnswer === index && {
+                  backgroundColor: '#FFEBEE',
+                },
               ]}
               onPress={() => handleAnswerSelect(index)}
               disabled={selectedAnswer !== null}
@@ -154,25 +170,32 @@ const CriticalQuestionsScreen = () => {
 
       <View style={styles.navigationContainer}>
         <TouchableOpacity
-          style={[
-            styles.navButton,
-            currentQuestionIndex === 0 && styles.disabledNavButton,
-          ]}
+          style={styles.navButton}
           onPress={handlePreviousQuestion}
           disabled={currentQuestionIndex === 0}
         >
-          <Text style={styles.navButtonText}>Trước</Text>
+          {[...Array(3)].map((_, i) => (
+            <MaterialCommunityIcons
+              key={i}
+              name="chevron-left"
+              size={30}
+              color={currentQuestionIndex === 0 ? "#999" : "#233646"}
+            />
+          ))}
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.navButton,
-            currentQuestionIndex === questions.length - 1 &&
-              styles.disabledNavButton,
-          ]}
+          style={styles.navButton}
           onPress={handleNextQuestion}
           disabled={currentQuestionIndex === questions.length - 1}
         >
-          <Text style={styles.navButtonText}>Sau</Text>
+          {[...Array(3)].map((_, i) => (
+            <MaterialCommunityIcons
+              key={i}
+              name="chevron-right"
+              size={30}
+              color={currentQuestionIndex === questions.length - 1 ? "#999" : "#1c84c6"}
+            />
+          ))}
         </TouchableOpacity>
       </View>
     </View>
@@ -180,8 +203,9 @@ const CriticalQuestionsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA', padding: 8 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+  container: { flex: 1, backgroundColor: '#fff', padding: 10 },
+  title: { fontSize: 18, fontWeight: 'bold' },
+  header: { flexDirection: "row", alignItems: "center", marginBottom: 10, justifyContent: "space-between" },
   questionCard: { padding: 15, backgroundColor: 'transparent', borderRadius: 10, marginBottom: 10 },
   questionText: { fontSize: 17, color: '#333', marginBottom: 10, fontWeight: 'bold' },
   optionButton: {
@@ -200,16 +224,15 @@ const styles = StyleSheet.create({
   },
   navigationContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 15 },
   navButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    backgroundColor: '#007AFF',
-    borderRadius: 5,
-    marginHorizontal: 5,
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
-  disabledNavButton: { backgroundColor: '#ccc' },
-  navButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  navButtonText: { color: '#111', fontWeight: 'bold' },
   endText: { marginTop: 20, fontSize: 16, fontWeight: 'bold', textAlign: 'center', color: '#333' },
   explainContainer: {
     marginTop: 15,

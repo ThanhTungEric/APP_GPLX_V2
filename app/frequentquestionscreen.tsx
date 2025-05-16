@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, PanResponder } from 'react-native';
-import { getFrequentMistakes } from './database/frequentmistakes';
+import { getFrequentMistakes } from '../database/frequentmistakes';
+import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const FrequentQuestionScreen = () => {
+    const router = useRouter();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+
     interface Answer {
         id: string;
         text: string;
@@ -19,15 +23,14 @@ const FrequentQuestionScreen = () => {
     }
 
     const [questions, setQuestions] = useState<Question[]>([]);
+
     useEffect(() => {
         const fetchFrequentMistakes = async () => {
             try {
                 const frequentMistakes = await getFrequentMistakes();
-                console.log('Frequent Mistakes:', frequentMistakes);
 
                 const mappedQuestions = frequentMistakes.map((mistake) => {
                     let parsedOptions: string[] = [];
-
                     try {
                         parsedOptions = JSON.parse(mistake.options);
                     } catch (error) {
@@ -38,10 +41,10 @@ const FrequentQuestionScreen = () => {
                         id: mistake.questionId,
                         question: mistake.content,
                         answers: parsedOptions.map((option: string, index: number) => ({
-                            id: String.fromCharCode(65 + index), // Assign A, B, C, ...
+                            id: String.fromCharCode(65 + index),
                             text: option.trim(),
                         })),
-                        correct: String.fromCharCode(65 + mistake.correctAnswerIndex), // Correct answer as A, B, C, ...
+                        correct: String.fromCharCode(65 + mistake.correctAnswerIndex),
                         image: mistake.imageName
                             ? `https://daotaolaixebd.com/app/uploads/${mistake.imageName}`
                             : undefined,
@@ -56,7 +59,6 @@ const FrequentQuestionScreen = () => {
 
         fetchFrequentMistakes();
     }, []);
-
 
     const handleAnswerSelect = (questionId: number, answerId: string) => {
         setSelectedAnswers({ ...selectedAnswers, [questionId]: answerId });
@@ -93,19 +95,29 @@ const FrequentQuestionScreen = () => {
         },
     });
 
+    // ✅ Giao diện nếu không có câu hỏi
     if (questions.length === 0) {
         return (
             <View style={styles.container}>
-                <Text style={styles.loadingText}>Đang tải câu hỏi...</Text>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.push('/')}>
+                        <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>CÂU HỎI HAY SAI</Text>
+                </View>
+
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>
+                    <Text style={styles.loadingText}>Không có câu hỏi thường sai nào.</Text>
+                </View>
             </View>
         );
     }
 
+    // ✅ Giao diện khi có câu hỏi
     const currentQuestion = questions[currentQuestionIndex];
 
     return (
         <View style={styles.container} {...panResponder.panHandlers}>
-            {/* Question */}
             <ScrollView style={styles.questionContainer}>
                 <Text style={styles.questionNumber}>
                     Câu {currentQuestionIndex + 1}/{questions.length}
@@ -137,7 +149,6 @@ const FrequentQuestionScreen = () => {
                 )}
             </ScrollView>
 
-            {/* Navigation */}
             <View style={styles.navigationContainer}>
                 <TouchableOpacity
                     style={[styles.navButton, currentQuestionIndex === 0 && styles.disabledNavButton]}
@@ -147,10 +158,7 @@ const FrequentQuestionScreen = () => {
                     <Text style={styles.navButtonText}>Câu Trước</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[
-                        styles.navButton,
-                        currentQuestionIndex === questions.length - 1 && styles.disabledNavButton
-                    ]}
+                    style={[styles.navButton, currentQuestionIndex === questions.length - 1 && styles.disabledNavButton]}
                     onPress={handleNextQuestion}
                     disabled={currentQuestionIndex === questions.length - 1}
                 >
@@ -162,8 +170,10 @@ const FrequentQuestionScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#fff', padding: 10, },
     questionContainer: { flex: 1, padding: 20 },
+    header: { flexDirection: "row", alignItems: "center", marginBottom: 10, justifyContent: "space-between" },
+    title: { fontSize: 17, fontWeight: 'bold', marginBottom: 5, textAlign: "center" },
     questionNumber: { fontSize: 16, fontWeight: 'bold', marginBottom: 10, color: '#555' },
     questionText: { fontSize: 18, fontWeight: 'bold', marginBottom: 20 },
     questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 15 },

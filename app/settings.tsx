@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Animated 
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { setGradingMode, getGradingMode, getCurrentLicense } from "./database/history";
-import { resetDatabase } from "./database/database";
+import { setGradingMode, getGradingMode, getCurrentLicense } from "../database/history";
+import { resetDatabase } from "../database/database";
 const SettingsScreen = () => {
     const router = useRouter();
     const [isVibrationEnabled, setVibrationEnabled] = useState(true);

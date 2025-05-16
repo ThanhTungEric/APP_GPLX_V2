@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { saveQuizHistory } from '../database/quizesshistory';
-import { getLicenseById } from '../database/licenses';
-import { getCurrentLicenseId } from '../database/history';
-import { saveFrequentMistake } from '../database/frequentmistakes';
+import { saveQuizHistory } from '../../database/quizesshistory';
+import { getLicenseById } from '../../database/licenses';
+import { getCurrentLicenseId } from '../../database/history';
+import { saveFrequentMistake } from '../../database/frequentmistakes';
 
 type License = {
     id: number;

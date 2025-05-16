@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StyleProp, TextStyle } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { getQuestionById } from '../database/questions';
+import { getQuestionById } from '../../database/questions';
 
 interface Question {
     id: number;

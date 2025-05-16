@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from "expo-router";
-import { getQuizzesByLicense } from './database/quizzes';
-import { getCurrentLicenseId } from './database/history';
-import { getQuizHistory } from './database/quizesshistory';
+import { getQuizzesByLicense } from '../database/quizzes';
+import { getCurrentLicenseId } from '../database/history';
+import { getQuizHistory } from '../database/quizesshistory';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { getCurrentLicense } from './database/history';
+import { getCurrentLicense } from '../database/history';
 interface Quiz {
   id: number;
   name: string;
@@ -128,7 +128,7 @@ const TestGrid = ({ quizzes, router, quizResults }: { quizzes: Quiz[]; router: a
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, backgroundColor: '#fff', elevation: 2 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   testGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', padding: 20 },

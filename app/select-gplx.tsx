@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { License, getAllLicenses } from "./database/licenses"; // Adjust based on your database structure
-import { setLicense, getCurrentLicense } from "./database/history"; // Adjust based on your database structure
+import { License, getAllLicenses } from "../database/licenses"; // Adjust based on your database structure
+import { setLicense, getCurrentLicense } from "../database/history"; // Adjust based on your database structure
+import { updateDataFromAPI } from "../database/database"; // Adjust based on your database structure
+import { getTotalQuestionsByLicense } from "../database/questions"; // Adjust based on your database structure
 
 const SelectGPLXScreen = () => {
   const router = useRouter();
@@ -12,33 +14,62 @@ const SelectGPLXScreen = () => {
   const [loading, setLoading] = useState<boolean>(true); // State for loading
   const [error, setError] = useState<string | null>(null); // State for error
 
-  // Load all licenses and current selected license
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch all licenses
-        const data = await getAllLicenses();
-        setLicenses(data);
-
-        // Fetch current license
+        const allLicenses = await getAllLicenses();
+        const validLicenses: License[] = [];
+  
+        for (const license of allLicenses) {
+          const count = await getTotalQuestionsByLicense(license.id);
+          if (count > 1) {
+            validLicenses.push(license);
+          }
+        }
+  
+        setLicenses(validLicenses);
+  
         const currentLicense = await getCurrentLicense();
         if (currentLicense) {
           setSelectedGPLX(currentLicense);
         }
       } catch (err) {
+        console.error(err);
         setError("Failed to load data. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
-
+  
     loadData();
   }, []);
+  
 
-  const handleSelectGPLX = (licenseName: string) => {
-    setSelectedGPLX(licenseName);
-    setLicense(licenseName); // Update the selected license in history
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSelectGPLX = async (licenseName: string) => {
+    setSubmitting(true);
+    try {
+      setSelectedGPLX(licenseName);
+      await setLicense(licenseName);
+      await updateDataFromAPI();
+      router.replace("/");
+    } catch (error) {
+      console.error("Lỗi khi chọn GPLX:", error);
+    } finally {
+      setSubmitting(false);
+    }
   };
+  
+  if (submitting) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text>Đang tải dữ liệu GPLX...</Text>
+      </View>
+    );
+  }
+  
 
   if (loading) {
     return (
@@ -91,7 +122,7 @@ const SelectGPLXScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8F9FA" },
+  container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: "row", alignItems: "center", padding: 15, backgroundColor: "#fff" },
   headerTitle: { flex: 1, textAlign: "center", fontSize: 20, fontWeight: "bold" },
   optionItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 15, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E5E5" },

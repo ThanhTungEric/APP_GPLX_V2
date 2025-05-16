@@ -7,7 +7,6 @@ export interface FrequentMistake {
     lastMistakeTimestamp: string;
 }
 
-// Lấy danh sách các câu hỏi hay sai kèm nội dung câu hỏi và danh sách đáp án
 export async function getFrequentMistakes(): Promise<(FrequentMistake & { content: string; options: string; correctAnswerIndex: number; imageName?: string })[]> {
     const db = await openDatabase();
     try {

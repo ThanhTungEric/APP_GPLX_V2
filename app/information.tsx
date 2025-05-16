@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-nati
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import {getVersion} from './database/database';
+import {getVersion} from '../database/database';
 const InformationScreen = () => {
   const router = useRouter();
   const [appVersion, setAppVersion] = useState<string>('');

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { getAllSavedQuestions } from './database/savequestion';
-import { getQuestionsByIds } from './database/questions'; // bạn cần viết thêm hàm này
-
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { getAllSavedQuestions } from '../database/savequestion';
+import { getQuestionsByIds } from '../database/questions'; // bạn cần viết thêm hàm này
+import { useRouter } from 'expo-router';
+import { getImageSource } from '../utils/getImageSource';
 const SavedQuestionsScreen = () => {
     type Question = {
         id: number;
@@ -12,8 +13,9 @@ const SavedQuestionsScreen = () => {
         correctAnswerIndex: number;
         imageName?: string;
         explain?: string;
+        number: number;
     };
-
+    const router = useRouter();
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -52,19 +54,25 @@ const SavedQuestionsScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Câu hỏi đã lưu</Text>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.push('/')}>
+                    <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
+                </TouchableOpacity>
+                <Text style={styles.title}>CÂU HỎI ĐÃ LƯU</Text>
+            </View>
+
             {questions.length > 0 ? (
                 <ScrollView style={styles.questionContainer}>
                     <View style={styles.questionHeader}>
                         <Text style={styles.questionContent}>
-                            Câu {currentIndex + 1}: {questions[currentIndex].content}
+                            Câu {questions[currentIndex].number}: {questions[currentIndex].content}
                         </Text>
                         <MaterialIcons name="bookmark" size={28} color="#4CAF50" />
                     </View>
 
                     {questions[currentIndex].imageName && (
                         <Image
-                            source={{ uri: `https://daotaolaixebd.com/app/uploads/${questions[currentIndex].imageName}` }}
+                            source={getImageSource(questions[currentIndex].imageName, questions[currentIndex].number)}
                             style={styles.questionImage}
                         />
                     )}
@@ -100,18 +108,23 @@ const SavedQuestionsScreen = () => {
             <View style={styles.navigationContainer}>
                 <View style={styles.navigationButtons}>
                     <TouchableOpacity
-                        style={[styles.navButton, currentIndex === 0 && styles.disabledButton]}
+                        style={[styles.navButton]}
                         onPress={handlePrevious}
                         disabled={currentIndex === 0}
                     >
-                        <Text style={styles.navButtonText}>Trước</Text>
+                        <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
+                        <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
+                        <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
                     </TouchableOpacity>
+
                     <TouchableOpacity
-                        style={[styles.navButton, currentIndex === questions.length - 1 && styles.disabledButton]}
+                        style={[styles.navButton]}
                         onPress={handleNext}
                         disabled={currentIndex === questions.length - 1}
                     >
-                        <Text style={styles.navButtonText}>Tiếp</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+                        <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+                        <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -121,7 +134,8 @@ const SavedQuestionsScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 10, backgroundColor: '#F8F9FA' },
-    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 5, textAlign: "center" },
+    header: { flexDirection: "row", alignItems: "center", marginBottom: 10, justifyContent: "space-between" },
+    title: { fontSize: 17, fontWeight: 'bold', marginBottom: 5, textAlign: "center" },
     questionContainer: { flex: 1, marginBottom: 20, padding: 5, backgroundColor: 'transparent', borderRadius: 10 },
     questionHeader: {
         flexDirection: 'row',
@@ -137,9 +151,8 @@ const styles = StyleSheet.create({
     incorrectOption: { backgroundColor: '#F8D7DA' },
     navigationContainer: { justifyContent: 'flex-end', marginBottom: 10 },
     navigationButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-    navButton: { padding: 15, backgroundColor: '#007AFF', borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5 },
-    disabledButton: { backgroundColor: '#ccc' },
-    navButtonText: { color: '#fff', fontWeight: 'bold' },
+    navButton: { padding: 15, borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5, display: 'flex', flexDirection: 'row', justifyContent: 'center' },
+    navButtonText: { color: '#111', fontWeight: 'bold' },
     questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 10 },
     explainContainer: {
         marginTop: 15,

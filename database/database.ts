@@ -103,24 +103,42 @@ export async function createTables() {
       selectedOption INTEGER,
       FOREIGN KEY (questionId) REFERENCES questions(id)
     );
+    CREATE TABLE IF NOT EXISTS frequentmistakes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      questionId INTEGER NOT NULL,
+      mistakeCount INTEGER DEFAULT 0,
+      lastMistakeTimestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (questionId) REFERENCES questions(id)
+    );
+
   `);
 }
 
-// Kiểm tra phiên bản
 export async function checkVersion() {
   const db = await openDatabase();
+
   const result = await db.getFirstAsync<{ version: string }>(
     'SELECT version FROM version ORDER BY id DESC LIMIT 1'
   );
   const versionInDB = result?.version || null;
+
   try {
     const response = await API.get('versions/lastest');
     const newVersion = response.data.version;
-    if (newVersion !== versionInDB) {
+
+    if (!versionInDB || newVersion !== versionInDB) {
       await updateDataFromAPI();
-    } 
+      await logHistory("hasSynced", "true");
+    }
   } catch (error) {
-    console.error("❌ Lỗi khi lấy phiên bản từ API:", error);
+    if (!versionInDB) {
+      try {
+        await updateDataFromAPI();
+        await logHistory("hasSynced", "true");
+      } catch (_) {
+        // Không cần log lỗi fallback nếu muốn giữ clean
+      }
+    }
   }
 }
 
@@ -149,9 +167,7 @@ export async function resetDatabase() {
     DROP TABLE IF EXISTS quizesshistory;
 
   `);
-  console.log('🗑️ Đã xóa tất cả dữ liệu!');
   await createTables();
-  console.log('📦 Đã tạo lại bảng dữ liệu!');
   await updateDataFromAPI();
 }
 
@@ -242,8 +258,6 @@ export async function updateDataFromAPI() {
       for (const version of versionsRes.data) {
         await db.runAsync('INSERT INTO version (version) VALUES (?)', version.version);
       }
-
-      console.log('🔄 Đã cập nhật dữ liệu từ API!');
     });
   } catch (error) {
     console.error('Lỗi khi cập nhật dữ liệu từ API:', error);

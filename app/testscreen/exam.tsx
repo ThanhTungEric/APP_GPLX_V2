@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ScrollView, Image, PanResponder, Animated } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { getQuestionsByQuiz } from '../database/quizzes';
-import { getLicenseById } from '../database/licenses';
-import { getCurrentLicenseId } from '../database/history';
-
+import { getQuestionsByQuiz } from '../../database/quizzes';
+import { getLicenseById } from '../../database/licenses';
+import { getCurrentLicenseId } from '../../database/history';
+import { getImageSource } from '../../utils/getImageSource';
 type License = { id: number; name: string; description: string; totalQuestions: number; requiredCorrect: number; durationMinutes: number; };
 
 const ExamScreen = () => {
@@ -216,8 +216,8 @@ const ExamScreen = () => {
                         {currentQuestion.imageName && (
                             <View style={{ width: '100%', aspectRatio: 4 / 3 }}>
                                 <Image
-                                    source={{ uri: `https://daotaolaixebd.com/app/uploads/${currentQuestion.imageName}` }}
-                                    style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
+                                    source={getImageSource(questions[currentQuestionIndex].imageName, questions[currentQuestionIndex].number)}
+                                    style={styles.questionImage}
                                 />
                             </View>
                         )}

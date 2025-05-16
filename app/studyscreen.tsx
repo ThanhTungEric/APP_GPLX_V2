@@ -10,20 +10,20 @@ import {
   Animated,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
-
-import { getQuestionsByChapter } from './database/questions';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { getImageSource } from '../utils/getImageSource';
+import { getQuestionsByChapter } from '../database/questions';
 import {
   insertSavedQuestion,
   getSavedQuestionByQuestionId,
   deleteSavedQuestionById,
-} from './database/savequestion';
+} from '../database/savequestion';
 import {
   insertHistoryQuestion,
   updateHistoryQuestion,
   getHistoryByQuestionId,
   clearAllHistory,
-} from './database/historyquestion';
+} from '../database/historyquestion';
 
 const StudyScreen = () => {
   const router = useRouter();
@@ -145,7 +145,12 @@ const StudyScreen = () => {
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.push('/')}>
+          <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+
       {questions.length > 0 ? (
         <Animated.ScrollView style={[styles.questionContainer, { transform: [{ translateX }] }]}>
           <View style={styles.questionHeader}>
@@ -163,7 +168,7 @@ const StudyScreen = () => {
 
           {questions[currentIndex].imageName && (
             <Image
-              source={{ uri: `https://daotaolaixebd.com/app/uploads/${questions[currentIndex].imageName}` }}
+              source={getImageSource(questions[currentIndex].imageName, questions[currentIndex].number)}
               style={styles.questionImage}
             />
           )}
@@ -199,18 +204,23 @@ const StudyScreen = () => {
       <View style={styles.navigationContainer}>
         <View style={styles.navigationButtons}>
           <TouchableOpacity
-            style={[styles.navButton, currentIndex === 0 && styles.disabledButton]}
+            style={[styles.navButton]}
             onPress={() => setCurrentIndex(currentIndex - 1)}
             disabled={currentIndex === 0}
           >
-            <Text style={styles.navButtonText}>Trước</Text>
+            <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
+            <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
+            <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.navButton, currentIndex === questions.length - 1 && styles.disabledButton]}
+            style={[styles.navButton]}
             onPress={() => setCurrentIndex(currentIndex + 1)}
             disabled={currentIndex === questions.length - 1}
           >
-            <Text style={styles.navButtonText}>Tiếp</Text>
+            <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+            <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+            <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
           </TouchableOpacity>
         </View>
       </View>
@@ -219,8 +229,9 @@ const StudyScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: '#F8F9FA' },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 5, textAlign: 'center' },
+  container: { flex: 1, padding: 10, backgroundColor: "#fff" },
+  header: { flexDirection: "row", alignItems: "center" },
+  title: { fontSize: 17, fontWeight: 'bold', marginBottom: 5, textAlign: 'center' },
   questionContainer: { flex: 1, marginBottom: 20, padding: 5, backgroundColor: 'transparent', borderRadius: 10 },
   questionHeader: {
     flexDirection: 'row',
@@ -236,9 +247,8 @@ const styles = StyleSheet.create({
   incorrectOption: { backgroundColor: '#F8D7DA' },
   navigationContainer: { justifyContent: 'flex-end', marginBottom: 10 },
   navigationButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-  navButton: { padding: 15, backgroundColor: '#007AFF', borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5 },
-  disabledButton: { backgroundColor: '#ccc' },
-  navButtonText: { color: '#fff', fontWeight: 'bold' },
+  navButton: { padding: 15, borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5, display: 'flex', flexDirection: 'row', justifyContent: 'center' },
+  navButtonText: { color: '#111', fontWeight: 'bold' },
   questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 10 },
   explainContainer: {
     marginTop: 15,

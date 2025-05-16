@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { getCurrentLicenseId } from './database/history';
-import { getLicenseById } from './database/licenses';
+import { getCurrentLicenseId } from '../database/history';
+import { getLicenseById } from '../database/licenses';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type License = {
@@ -29,7 +29,6 @@ const TestDetailScreen = () => {
         })();
     }, []);
 
-    console.log(id, title, licenseName)
 
     const handleStartTest = () => {
         router.push({
@@ -79,7 +78,7 @@ const TestDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1, backgroundColor: '#fff' },
 
     header: {
         flexDirection: 'row',

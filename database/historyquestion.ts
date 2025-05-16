@@ -14,7 +14,6 @@ export async function insertHistoryQuestion(questionId: number, selectedOption: 
     questionId,
     selectedOption
   );
-  console.log('Inserted history for questionId:', questionId, 'with option:', selectedOption);
 }
 
 // Cập nhật lựa chọn nếu câu hỏi đã có trong lịch sử

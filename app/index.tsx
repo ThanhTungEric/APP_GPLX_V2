@@ -2,37 +2,62 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
-import { createTables, checkVersion, getVersion } from './database/database';
-import { getAllChapters } from './database/chapter';
-import {getCurrentLicense} from './database/history';
-import { getLicenseIdByName} from './database/licenses';
-import { getSavedQuestionCount } from './database/historyquestion';
-import { getQuestionCountsByChapterAndLicense,getTotalQuestionsByLicense   } from './database/questions';
+import { createTables, checkVersion, getVersion } from '../database/database';
+import { getAllChapters } from '../database/chapter';
+import { getCurrentLicense } from '../database/history';
+import { getLicenseIdByName } from '../database/licenses';
+import { getSavedQuestionCount } from '../database/historyquestion';
+import { getQuestionCountsByChapterAndLicense, getTotalQuestionsByLicense } from '../database/questions';
 
 const Index = () => {
 
   const router = useRouter();
   const [currentLicense, setCurrentLicense] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
     (async () => {
-      await createTables();
-      await checkVersion();
-      await getVersion();
+      try {
+        await createTables();
+        await checkVersionAndUpdate();
+        const license = await getCurrentLicense();
 
-      const license = await getCurrentLicense();
-
-      if (!license) {
-        router.replace('/select-gplx');
-      } else {
+        if (!license) {
+          router.replace('/select-gplx');
+          return;
+        }
         setCurrentLicense(license);
+        setIsReady(true);
+      } catch (error) {
+        setIsReady(true);
       }
     })();
   }, []);
-  
+
+
+
+  async function checkVersionAndUpdate() {
+    try {
+      await checkVersion();
+    } catch (error) {
+      console.error("❌ Không thể kiểm tra phiên bản:", error);
+    }
+  }
+
+
+  if (!isReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Đang khởi động...</Text>
+      </View>
+    );
+  }
+
+
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Header router={router} licenses={currentLicense}/>
+      <Header router={router} licenses={currentLicense} />
 
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -59,7 +84,7 @@ const Header = ({ router, licenses }: { router: ReturnType<typeof useRouter>; li
       <Icon name="cog" size={22} color="#007AFF" />
     </TouchableOpacity>
     <Text style={styles.headerTitle}>HOCLAIXE - {licenses ?? "?"}</Text>
-    <Icon name="trophy" size={22} color="gold" />
+    {/* <Icon name="trophy" size={22} color="gold" /> */}
   </View>
 );
 
@@ -102,7 +127,7 @@ const FeatureGrid = () => {
   return (
     <View style={styles.featureGrid}>
       {[
-        // { icon: "book", text: "THI THỬ", color: "#007AFF" },
+        { icon: "book", text: "THI THỬ", color: "#007AFF" },
         { icon: "bookmark", text: "LƯU", color: "#00C853" },
         { icon: "times-circle", text: "CÂU HỎI ĐIỂM LIỆT", color: "#FF3D00" },
         { icon: "file-text", text: "CÂU HAY SAI", color: "#FFD600" },
@@ -168,25 +193,25 @@ const StudyTopics = () => {
   React.useEffect(() => {
     async function fetchChaptersWithQuestions() {
       try {
-        const licenseName = await getCurrentLicense(); // Trả về "B2", "A1", v.v.
+        const licenseName = await getCurrentLicense(); 
         const licenseIdNum = await getLicenseIdByName(licenseName ?? '');
         if (!licenseIdNum) {
           setLicenseId(1);
           return;
         }
-  
+
         setLicenseId(licenseIdNum);
-  
+
         const chapters = await getAllChapters();
         const questionCountWithChapterIdAndLicenseId = await getQuestionCountsByChapterAndLicense();
-  
+
         const chaptersWithCounts = chapters.map((chapter) => {
           const countData = questionCountWithChapterIdAndLicenseId.find(
             (q) => q.chapterId === chapter.id && q.licenseId === licenseIdNum
           );
           return { ...chapter, questionCount: countData?.questionCount || 0 };
         });
-  
+
         setTopics(chaptersWithCounts);
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu chủ đề và câu hỏi:', error);
@@ -194,7 +219,7 @@ const StudyTopics = () => {
     }
     fetchChaptersWithQuestions();
   }, []);
-  
+
 
   const handleTopicPress = (id: number, name: string) => {
     router.push({ pathname: '/studyscreen', params: { id, title: name, licenseId } });
@@ -232,7 +257,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: { color: '#007AFF', fontWeight: 'bold' },
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', margin: 10 },
   featureButton: { width: '45%', padding: 20, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
-  featureText: { color: '#fff', marginTop: 5, fontWeight: 'bold' },
+  featureText: { color: '#fff', marginTop: 5, fontWeight: 'bold', textAlign: 'center' },
   progressContainer: { padding: 15, backgroundColor: '#fff', margin: 10, borderRadius: 10 },
   progressTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
   progressBar: {
