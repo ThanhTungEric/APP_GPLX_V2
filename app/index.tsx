@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from "expo-router";
-import { createTables, checkVersion, getVersion } from '../database/database';
+import { checkVersion } from '../database/database';
 import { getAllChapters } from '../database/chapter';
 import { getCurrentLicense } from '../database/history';
 import { getLicenseIdByName } from '../database/licenses';
@@ -10,7 +10,6 @@ import { getSavedQuestionCount } from '../database/historyquestion';
 import { getQuestionCountsByChapterAndLicense, getTotalQuestionsByLicense } from '../database/questions';
 
 const Index = () => {
-
   const router = useRouter();
   const [currentLicense, setCurrentLicense] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -18,37 +17,28 @@ const Index = () => {
   useEffect(() => {
     (async () => {
       try {
-        await createTables();
-        await checkVersionAndUpdate();
         const license = await getCurrentLicense();
 
         if (!license) {
           router.replace('/select-gplx');
           return;
         }
+
         setCurrentLicense(license);
-        setIsReady(true);
+        await checkVersion(); // Chỉ gọi check version nếu đã chọn license
       } catch (error) {
+        console.error("❌ Lỗi khi khởi tạo Index:", error);
+      } finally {
         setIsReady(true);
       }
     })();
   }, []);
 
-
-
-  async function checkVersionAndUpdate() {
-    try {
-      await checkVersion();
-    } catch (error) {
-      console.error("❌ Không thể kiểm tra phiên bản:", error);
-    }
-  }
-
-
   if (!isReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Đang khởi động...</Text>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={{ marginTop: 10 }}>Đang tải dữ liệu...</Text>
       </View>
     );
   }
@@ -193,7 +183,7 @@ const StudyTopics = () => {
   React.useEffect(() => {
     async function fetchChaptersWithQuestions() {
       try {
-        const licenseName = await getCurrentLicense(); 
+        const licenseName = await getCurrentLicense();
         const licenseIdNum = await getLicenseIdByName(licenseName ?? '');
         if (!licenseIdNum) {
           setLicenseId(1);

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Modal, ScrollView, Image, PanResponder, Animated } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { getQuestionsByQuiz } from '../../database/quizzes';
 import { getLicenseById } from '../../database/licenses';
 import { getCurrentLicenseId } from '../../database/history';
@@ -174,96 +176,97 @@ const ExamScreen = () => {
 
     return (
         <View style={styles.container}>
-            {/* Timer and Status Row */}
-            <View style={styles.timerAndStatusRow}>
-                <View style={styles.timerBox}>
-                    <Text style={styles.timerText}>
-                        {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                    </Text>
-                </View>
-
-                <View style={styles.questionStatusContainer}>
-                    {questions.map((q, index) => {
-                        const answered = selectedAnswers[q.id] !== undefined;
-                        const isCurrent = index === currentQuestionIndex;
-                        return (
-                            <View
-                                key={q.id}
-                                style={[
-                                    styles.circle,
-                                    answered ? styles.circleAnswered : styles.circleUnanswered,
-                                    isCurrent && styles.circleCurrent,
-                                ]}
-                            >
-                                <Text style={styles.circleText}>{index + 1}</Text>
-                            </View>
-                        );
-                    })}
-                </View>
-            </View>
-
-            {/* Swipeable Question Content */}
-            <Animated.View
-                {...panResponder.panHandlers} // Apply panResponder here
-                style={[styles.questionContainer, { transform: [{ translateX }], opacity: fadeAnim }]}
-            >
-                {currentQuestion && (
-                    <View>
-                        <Text style={styles.questionText}>
-                            Câu hỏi {currentQuestionIndex + 1}/{questions.length}:
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
+                {/* Timer and Status Row */}
+                <View style={styles.timerAndStatusRow}>
+                    <View style={styles.timerBox}>
+                        <Text style={styles.timerText}>
+                            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                         </Text>
-                        <Text style={styles.questionText}>{currentQuestion.content}</Text>
-                        {currentQuestion.imageName && (
-                            <View style={{ width: '100%', aspectRatio: 4 / 3 }}>
+                    </View>
+
+                    <View style={styles.questionStatusContainer}>
+                        {questions.map((q, index) => {
+                            const answered = selectedAnswers[q.id] !== undefined;
+                            const isCurrent = index === currentQuestionIndex;
+                            return (
+                                <View
+                                    key={q.id}
+                                    style={[
+                                        styles.circle,
+                                        answered ? styles.circleAnswered : styles.circleUnanswered,
+                                        isCurrent && styles.circleCurrent,
+                                    ]}
+                                >
+                                    <Text style={styles.circleText}>{index + 1}</Text>
+                                </View>
+                            );
+                        })}
+                    </View>
+                </View>
+
+                {/* Swipeable Question Content */}
+                <Animated.View
+                    {...panResponder.panHandlers}
+                    style={[{ transform: [{ translateX }], opacity: fadeAnim }]}
+                >
+                    {currentQuestion && (
+                        <View>
+                            <Text style={styles.questionText}>
+                                Câu hỏi {currentQuestionIndex + 1}/{questions.length}:
+                            </Text>
+                            <Text style={styles.questionText}>{currentQuestion.content}</Text>
+                            {currentQuestion.imageName && (
                                 <Image
-                                    source={getImageSource(questions[currentQuestionIndex].imageName, questions[currentQuestionIndex].number)}
+                                    source={getImageSource(currentQuestion.imageName, currentQuestion.number)}
                                     style={styles.questionImage}
                                 />
-                            </View>
-                        )}
-                        <ScrollView
-                            style={styles.questionScroll}
-                            contentContainerStyle={styles.questionScrollContent}
-                        >
-                            {JSON.parse(currentQuestion.options).map((option: string, index: number) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={[
-                                        styles.answerButton,
-                                        selectedAnswers[currentQuestion.id] === index &&
-                                        styles.selectedAnswerButton,
-                                    ]}
-                                    onPress={() => handleAnswerSelect(currentQuestion.id, index)}
-                                >
-                                    <Text style={styles.answerText}> {option} </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
-                )}
-            </Animated.View>
+                            )}
 
-            {/* Navigation */}
+                            <ScrollView
+                                style={styles.questionScroll}
+                                contentContainerStyle={styles.questionScrollContent}
+                            >
+                                {JSON.parse(currentQuestion.options).map((option: string, index: number) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[
+                                            styles.answerButton,
+                                            selectedAnswers[currentQuestion.id] === index && styles.selectedAnswerButton,
+                                        ]}
+                                        onPress={() => handleAnswerSelect(currentQuestion.id, index)}
+                                    >
+                                        <Text style={styles.answerText}> {option} </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    )}
+                </Animated.View>
+            </ScrollView>
+
+            {/* Fixed Navigation at bottom */}
             <View style={styles.navigationContainer}>
                 <TouchableOpacity
-                    style={[styles.navButton, currentQuestionIndex === 0 && styles.disabledNavButton]}
-                    onPress={handlePreviousQuestion}
+                    style={[styles.navButton]}
+                    onPress={() => handleQuestionTransition('previous')}
                     disabled={currentQuestionIndex === 0}
                 >
-                    <Text style={styles.navButtonText}>Câu Trước</Text>
+                    <MaterialCommunityIcons name="chevron-left" size={30} color={currentQuestionIndex === 0 ? "#999" : "#1c84c6"} />
+                    <MaterialCommunityIcons name="chevron-left" size={30} color={currentQuestionIndex === 0 ? "#999" : "#1c84c6"} />
+                    <MaterialCommunityIcons name="chevron-left" size={30} color={currentQuestionIndex === 0 ? "#999" : "#1c84c6"} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
                     <Text style={styles.submitButtonText}>Nộp Bài</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[
-                        styles.navButton,
-                        currentQuestionIndex === questions.length - 1 && styles.disabledNavButton,
-                    ]}
-                    onPress={handleNextQuestion}
+                    style={[styles.navButton]}
+                    onPress={() => handleQuestionTransition('next')}
                     disabled={currentQuestionIndex === questions.length - 1}
                 >
-                    <Text style={styles.navButtonText}>Câu Tiếp</Text>
+                    <MaterialCommunityIcons name="chevron-right" size={30} color={currentQuestionIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+                    <MaterialCommunityIcons name="chevron-right" size={30} color={currentQuestionIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+                    <MaterialCommunityIcons name="chevron-right" size={30} color={currentQuestionIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
                 </TouchableOpacity>
             </View>
 
@@ -287,13 +290,14 @@ const ExamScreen = () => {
                             )}
                         />
                         <View style={styles.modalActions}>
-                            <TouchableOpacity style={styles.modalButton} onPress={() => setIsModalVisible(false)} >
-                                <Text style={styles.modalButtonText}>Hủy</Text>
+                            <TouchableOpacity style={styles.modalButton} onPress={() => setIsModalVisible(false)}>
+                                <Text style={[styles.modalButtonText, { color: '#888' }]}>Hủy</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.modalButton} onPress={confirmSubmit}>
-                                <Text style={styles.modalButtonText}>Xác Nhận</Text>
+                                <Text style={[styles.modalButtonText, { color: '#007AFF' }]}>Xác nhận</Text>
                             </TouchableOpacity>
                         </View>
+
                     </View>
                 </View>
             </Modal>
@@ -303,36 +307,53 @@ const ExamScreen = () => {
 
 // Styles giữ nguyên như cũ
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#Fff', justifyContent: "space-between", padding: 10 },
+    container: { flex: 1, backgroundColor: '#fff', padding: 10 },
     header: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
     headerTitle: { fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
-    questionContainer: { padding: 10 },
     questionText: { fontSize: 18, fontWeight: 'bold', marginBottom: 3 },
     answerButton: { padding: 10, borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 10, backgroundColor: '#fff' },
     selectedAnswerButton: { backgroundColor: '#E3F2FD', borderColor: '#007AFF' },
     answerText: { fontSize: 16, color: '#333' },
     navigationContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, backgroundColor: '#fff' },
-    navButton: { paddingVertical: 10, paddingHorizontal: 20, backgroundColor: '#007AFF', borderRadius: 8 },
-    disabledNavButton: { backgroundColor: '#ccc' },
-    navButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    submitButton: { backgroundColor: '#28A745', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
+    navButton: { padding: 15, borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5, display: 'flex', flexDirection: 'row', justifyContent: 'center' },
+    navButtonText: { color: '#111', fontWeight: 'bold' },
+    submitButton: { backgroundColor: '#28A745', paddingHorizontal: 20, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
     submitButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
     modalContent: { width: '90%', backgroundColor: '#fff', borderRadius: 8, padding: 20, maxHeight: '80%' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
-    questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginBottom: 15 },
+    questionImage: {
+        width: '100%',
+        height: 200,
+        resizeMode: 'contain',
+        marginVertical: 10,
+    },
     questionScroll: { marginBottom: 15, marginTop: 10 },
     questionScrollContent: { paddingBottom: 5 },
     modalQuestionContainer: { marginBottom: 15, padding: 10, backgroundColor: '#f9f9f9', borderRadius: 8, borderWidth: 1, borderColor: '#ddd', },
     modalQuestionText: { fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
     modalAnswerText: { fontSize: 14, color: '#333' },
-    modalActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 },
-    modalButton: { backgroundColor: '#007AFF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
-    modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    modalButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        backgroundColor: '#f2f2f2',
+        marginHorizontal: 5,
+    },
+    modalButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 15,
+    },
+
     timerBox: { backgroundColor: '#FFEFD5', paddingVertical: 5, paddingHorizontal: 5, width: 60, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', borderRadius: 8, },
     timerText: { fontSize: 16, color: '#dc3545', fontWeight: '500', },
     timerAndStatusRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 10, },
-    questionStatusContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, flex: 1, },
+    questionStatusContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 2, flex: 1, },
     circle: { width: 20, height: 20, borderRadius: 14, justifyContent: 'center', alignItems: 'center', },
     circleAnswered: { backgroundColor: '#007AFF', },
     circleUnanswered: { backgroundColor: '#ccc', },

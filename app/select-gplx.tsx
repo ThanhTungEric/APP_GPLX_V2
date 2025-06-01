@@ -1,81 +1,81 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { License, getAllLicenses } from "../database/licenses"; // Adjust based on your database structure
-import { setLicense, getCurrentLicense } from "../database/history"; // Adjust based on your database structure
-import { updateDataFromAPI } from "../database/database"; // Adjust based on your database structure
-import { getTotalQuestionsByLicense } from "../database/questions"; // Adjust based on your database structure
+import { License, getAllLicenses } from "../database/licenses";
+import { setLicense, getCurrentLicense } from "../database/history";
+import { updateDataFromAPI } from "../database/database";
+import { getTotalQuestionsByLicense } from "../database/questions";
 
 const SelectGPLXScreen = () => {
   const router = useRouter();
   const [licenses, setLicenses] = useState<License[]>([]);
   const [selectedGPLX, setSelectedGPLX] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true); // State for loading
-  const [error, setError] = useState<string | null>(null); // State for error
+  const [error, setError] = useState<string | null>(null);
+  const [isBusy, setIsBusy] = useState<boolean>(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const allLicenses = await getAllLicenses();
         const validLicenses: License[] = [];
-  
+
         for (const license of allLicenses) {
           const count = await getTotalQuestionsByLicense(license.id);
           if (count > 1) {
             validLicenses.push(license);
           }
         }
-  
+
+        if (validLicenses.length === 0) {
+          setError("Không có loại GPLX khả dụng. Vui lòng thử lại sau.");
+          return;
+        }
+
         setLicenses(validLicenses);
-  
+
         const currentLicense = await getCurrentLicense();
         if (currentLicense) {
           setSelectedGPLX(currentLicense);
         }
       } catch (err) {
         console.error(err);
-        setError("Failed to load data. Please try again later.");
+        setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
       } finally {
-        setLoading(false);
+        setIsBusy(false);
       }
     };
-  
+
     loadData();
   }, []);
-  
-
-  const [submitting, setSubmitting] = useState(false);
 
   const handleSelectGPLX = async (licenseName: string) => {
-    setSubmitting(true);
+    setIsBusy(true);
     try {
       setSelectedGPLX(licenseName);
       await setLicense(licenseName);
       await updateDataFromAPI();
       router.replace("/");
     } catch (error) {
-      console.error("Lỗi khi chọn GPLX:", error);
+      console.error("❌ Lỗi khi chọn GPLX:", error);
+      setError("Có lỗi xảy ra khi chọn GPLX.");
     } finally {
-      setSubmitting(false);
+      setIsBusy(false);
     }
   };
-  
-  if (submitting) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text>Đang tải dữ liệu GPLX...</Text>
-      </View>
-    );
-  }
-  
 
-  if (loading) {
+  if (isBusy) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text>Loading...</Text>
+        <Text>Đang xử lý dữ liệu...</Text>
       </View>
     );
   }
@@ -90,43 +90,70 @@ const SelectGPLXScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/settings')}>
+        <TouchableOpacity onPress={() => router.push("/settings")}>
           <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chọn loại GPLX</Text>
       </View>
 
-      {/* Danh sách GPLX từ SQLite */}
       <FlatList
         data={licenses}
-        keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()} // Ensure a valid key
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.optionItem}
-            onPress={() => handleSelectGPLX(item.name)}  // Gọi hàm khi chọn GPLX
-          >
-            <View>
-              <Text style={styles.optionTitle}>{item.name}</Text>
-              <Text style={styles.optionDesc}>{item.description}</Text>
-            </View>
-            {selectedGPLX === item.name && (
-              <MaterialCommunityIcons name="check" size={24} color="green" />
-            )}
-          </TouchableOpacity>
-        )}
+        keyExtractor={(item) => item.id.toString()}
+        initialNumToRender={5}
+        extraData={selectedGPLX}
+        renderItem={({ item }) => {
+          const isSelected = selectedGPLX === item.name;
+          return (
+            <TouchableOpacity
+              style={[styles.optionItem, isSelected && styles.optionItemSelected]}
+              onPress={() => handleSelectGPLX(item.name)}
+            >
+              <View>
+                <Text style={[styles.optionTitle, isSelected && styles.optionTitleSelected]}>
+                  {item.name}
+                </Text>
+                <Text style={styles.optionDesc}>{item.description}</Text>
+              </View>
+              {isSelected && (
+                <MaterialCommunityIcons name="check" size={24} color="green" />
+              )}
+            </TouchableOpacity>
+          );
+        }}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: "row", alignItems: "center", padding: 15, backgroundColor: "#fff" },
-  headerTitle: { flex: 1, textAlign: "center", fontSize: 20, fontWeight: "bold" },
-  optionItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 15, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E5E5" },
-  optionTitle: { fontSize: 16, fontWeight: "bold" },
+  container: { flex: 1, backgroundColor: "#fff" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  optionItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
+  },
+  optionItemSelected: {
+    backgroundColor: "#E6F0FF",
+  },
+  optionTitle: { fontSize: 16, fontWeight: "bold", color: "#000" },
+  optionTitleSelected: { color: "#007AFF" },
   optionDesc: { fontSize: 14, color: "#666" },
   loadingContainer: {
     flex: 1,
@@ -142,6 +169,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     fontSize: 16,
+    textAlign: "center",
   },
 });
 

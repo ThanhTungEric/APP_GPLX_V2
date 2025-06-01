@@ -84,7 +84,6 @@ const ResultScreen = () => {
         const saveMistakes = async () => {
             const incorrectQuestions = results.filter((item) => !item.isCorrect);
             for (const question of incorrectQuestions) {
-                console.log('Saving frequent mistake for question:', question.id);
                 await saveFrequentMistake(question.id);
             }
         };
@@ -162,7 +161,7 @@ const ResultScreen = () => {
 
 // Styles giữ nguyên
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8F9FA', padding: 10 },
+    container: { flex: 1, backgroundColor: '#fff', padding: 10 },
     header: {
         flexDirection: 'row',
         alignItems: 'center',

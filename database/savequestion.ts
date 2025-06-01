@@ -10,7 +10,6 @@ export async function insertSavedQuestion(questionId: number): Promise<void> {
         `INSERT INTO save_question (questionId) VALUES (?);`,
         questionId
     );
-    console.log('Inserted saved question with ID:', questionId);
 }
 export async function updateAnswerForQuestion(questionId: number, answer: string): Promise<void> {
     const db = await openDatabase();

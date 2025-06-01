@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 16.4.1",
+    "version": ">= 3.0.0",
     "appVersionSource": "remote"
   },
   "build": {
@@ -15,12 +15,20 @@
       }
     },
     "production": {
+      "channel": "production",
+      "autoIncrement": true
     }
   },
   "submit": {
     "production": {
       "android": {
         "serviceAccountKeyPath": "../KeyDriverMate/pc-api-4650125399650256181-813-443275e1d771.json"
+      }
+      ,
+      "ios": {
+        "appleId": "maivanthuong306@gmail.com",
+        "ascAppId": "6505014205",
+        "appleTeamId": "87Q99J63W2"
       }
     }
   }

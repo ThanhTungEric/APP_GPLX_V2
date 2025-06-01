@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Lái Xe 360",
-    "slug": "app-ui",
+    "slug": "lai-xe-360",
     "version": "1.1.9",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -17,15 +17,17 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.thanhtung15052001.appui"
+      "bundleIdentifier": "com.thanhtung15052001.appui",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#2d9bd8"
       },
-      "package": "com.thanhtung15052001.appui",
-      "versionCode": 19
+      "package": "com.thanhtung15052001.appui"
     },
     "web": {
       "bundler": "metro",
@@ -65,6 +67,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/101ed8e7-c6b7-46d3-9a4d-2e403e1fd112"
     }
   }
 }
