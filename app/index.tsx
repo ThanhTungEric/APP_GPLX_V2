@@ -99,8 +99,8 @@ const FeatureGrid = () => {
     else if (text == "BIỂN BÁO") {
       router.push("/signscreen");
     }
-    else if (text === "MẸO") {
-      router.push("/tipsscreen");
+    else if (text === "LÝ THUYẾT") {
+      router.push("/Synthetic");
     }
     else if (text === "CÂU HAY SAI") {
       router.push("/frequentquestionscreen");
@@ -122,7 +122,7 @@ const FeatureGrid = () => {
         { icon: "times-circle", text: "CÂU HỎI ĐIỂM LIỆT", color: "#FF3D00" },
         { icon: "file-text", text: "CÂU HAY SAI", color: "#FFD600" },
         //{ icon: "road", text: "SA HÌNH", color: "#007AFF" }, // Thêm SA HÌNH
-        //{ icon: "lightbulb-o", text: "MẸO", color: "#00C853" }, // Thêm MẸO
+        { icon: "lightbulb-o", text: "LÝ THUYẾT", color: "#00C853" }, // Thêm MẸO
         //{ icon: "exclamation-triangle", text: "BIỂN BÁO", color: "#FF3D00" }, // Thêm BIỂN BÁO
         //{ icon: "comments", text: "HỎI ĐÁP", color: "#007AFF" }, // Thêm HỎI ĐÁP
       ].map((item, index) => (

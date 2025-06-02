@@ -182,6 +182,7 @@ export async function getVersion() {
   const result = await db.getFirstAsync<{ id: number, version: string, createdAt: string, updatedAt: string }>(
     'SELECT * FROM version ORDER BY id DESC LIMIT 1'
   );
+
   return result;
 }
 

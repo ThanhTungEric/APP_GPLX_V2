@@ -25,6 +25,21 @@ const ExamScreen = () => {
     const [isSwiping, setIsSwiping] = useState(false);
     const fadeAnim = useState(new Animated.Value(1))[0]; // Animation for fade effect
 
+    const shuffleOptionsAndAdjustAnswer = (
+        options: string[],
+        correctIndex: number
+    ): { shuffledOptions: string[]; newCorrectIndex: number } => {
+        const indexedOptions = options.map((opt, i) => ({ opt, index: i }));
+        for (let i = indexedOptions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indexedOptions[i], indexedOptions[j]] = [indexedOptions[j], indexedOptions[i]];
+        }
+        const shuffledOptions = indexedOptions.map((item) => item.opt);
+        const newCorrectIndex = indexedOptions.findIndex((item) => item.index === correctIndex);
+        return { shuffledOptions, newCorrectIndex };
+    };
+
+
     useEffect(() => {
         (async () => {
             const licenseId = await getCurrentLicenseId();
@@ -65,7 +80,18 @@ const ExamScreen = () => {
             try {
                 const quizId = Array.isArray(id) ? parseInt(id[0]) : parseInt(id);
                 const result = await getQuestionsByQuiz(quizId);
-                const formattedQuestions = result.map((q) => ({ ...q, isCritical: !!q.isCritical, options: typeof q.options === 'string' ? q.options : JSON.stringify(q.options), }));
+                const formattedQuestions = result.map((q) => {
+                    const originalOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+                    const { shuffledOptions, newCorrectIndex } = shuffleOptionsAndAdjustAnswer(originalOptions, q.correctAnswerIndex);
+
+                    return {
+                        ...q,
+                        options: JSON.stringify(shuffledOptions),
+                        correctAnswerIndex: newCorrectIndex,
+                        isCritical: !!q.isCritical,
+                    };
+                });
+
                 setQuestions(formattedQuestions);
             } catch (error) { console.error('Error fetching questions:', error); }
         };
