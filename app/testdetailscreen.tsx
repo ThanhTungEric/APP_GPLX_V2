@@ -69,7 +69,7 @@ const TestDetailScreen = () => {
                 )}
 
                 <TouchableOpacity style={styles.startButton} onPress={handleStartTest}>
-                    <Text style={styles.startButtonText}>Bắt Đầu Thi</Text>
+                    <Text style={styles.startButtonText}>BẮT ĐẦU THI</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -142,7 +142,6 @@ const styles = StyleSheet.create({
         marginTop: 30,
         paddingVertical: 12,
         paddingHorizontal: 30,
-        borderRadius: 10,
         elevation: 3,
     },
 

@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Image,
-  PanResponder,
+  ScrollView,
+  FlatList,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+
 import { getImageSource } from '../utils/getImageSource';
 import { getQuestionsByChapter } from '../database/questions';
 import {
@@ -24,10 +26,13 @@ import {
   getHistoryByQuestionId,
   clearAllHistory,
 } from '../database/historyquestion';
+import { saveCorrectQuestion } from '../database/questionprogress';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const StudyScreen = () => {
   const router = useRouter();
-  const { id, title } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
 
   type Question = {
     id: number;
@@ -41,93 +46,65 @@ const StudyScreen = () => {
   };
 
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSaved, setIsSaved] = useState(false);
-  const [isSwiping, setIsSwiping] = useState(false);
-  const translateX = useState(new Animated.Value(0))[0];
+
+  const flatListRef = useRef<FlatList>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      setCurrentIndex(viewableItems[0].index);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
 
   useEffect(() => {
-    async function fetchQuestions() {
-      try {
-        await clearAllHistory(); // Xóa lịch sử
-        const chapterQuestions = await getQuestionsByChapter(Number(id));
-        setQuestions(chapterQuestions);
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-      }
+    async function fetchData() {
+      await clearAllHistory();
+      const data = await getQuestionsByChapter(Number(id));
+      setQuestions(data);
     }
-    fetchQuestions();
+    fetchData();
   }, [id]);
 
   useEffect(() => {
-    async function checkStatus() {
-      const question = questions[currentIndex];
-      if (!question) return;
-
-      const saved = await getSavedQuestionByQuestionId(question.id);
+    async function updateSaveStatus() {
+      const q = questions[currentIndex];
+      if (!q) return;
+      const saved = await getSavedQuestionByQuestionId(q.id);
       setIsSaved(!!saved);
 
-      const history = await getHistoryByQuestionId(question.id);
+      const history = await getHistoryByQuestionId(q.id);
       if (history?.selectedOption !== null && history?.selectedOption !== undefined) {
-        setSelectedOption(history.selectedOption);
-      } else {
-        setSelectedOption(null);
+        setSelectedAnswers(prev => ({
+          ...prev,
+          [q.id]: history.selectedOption as number
+        }));
       }
+
     }
-    checkStatus();
+
+    updateSaveStatus();
   }, [currentIndex, questions]);
 
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20 && !isSwiping,
-    onPanResponderGrant: () => setIsSwiping(true),
-    onPanResponderMove: (_, gestureState) => {
-      translateX.setValue(gestureState.dx);
-    },
-    onPanResponderRelease: (_, gestureState) => {
-      const threshold = 100;
-      if (gestureState.dx > threshold && currentIndex > 0) {
-        Animated.timing(translateX, {
-          toValue: 500,
-          duration: 200,
-          useNativeDriver: true,
-        }).start(() => {
-          setCurrentIndex((prev) => prev - 1);
-          translateX.setValue(-500);
-          Animated.timing(translateX, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => setIsSwiping(false));
-        });
-      } else if (gestureState.dx < -threshold && currentIndex < questions.length - 1) {
-        Animated.timing(translateX, {
-          toValue: -500,
-          duration: 200,
-          useNativeDriver: true,
-        }).start(() => {
-          setCurrentIndex((prev) => prev + 1);
-          translateX.setValue(500);
-          Animated.timing(translateX, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => setIsSwiping(false));
-        });
-      } else {
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start(() => setIsSwiping(false));
-      }
-    },
-  });
+  const handleAnswerSelect = async (questionId: number, answerIndex: number) => {
+    setSelectedAnswers(prev => ({ ...prev, [questionId]: answerIndex }));
 
-  const handleOptionSelect = async (index: number) => {
-    setSelectedOption(index);
-    const question = questions[currentIndex];
-    const existing = await getHistoryByQuestionId(question.id);
-    if (existing) {
-      await updateHistoryQuestion(question.id, index);
+    const history = await getHistoryByQuestionId(questionId);
+    if (history) {
+      await updateHistoryQuestion(questionId, answerIndex);
     } else {
-      await insertHistoryQuestion(question.id, index);
+      await insertHistoryQuestion(questionId, answerIndex);
+    }
+
+    const question = questions.find(q => q.id === questionId);
+    if (question && answerIndex === question.correctAnswerIndex) {
+      await saveCorrectQuestion(questionId);
     }
   };
 
@@ -143,20 +120,17 @@ const StudyScreen = () => {
     }
   };
 
-  return (
-    <View style={styles.container} {...panResponder.panHandlers}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/')}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
+  const renderItem = ({ item, index }: { item: Question; index: number }) => {
+    const selected = selectedAnswers[item.id];
+    const options = JSON.parse(item.options);
 
-      {questions.length > 0 ? (
-        <Animated.ScrollView style={[styles.questionContainer, { transform: [{ translateX }] }]}>
+    return (
+      <View style={{ width: SCREEN_WIDTH, padding: 10}}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={styles.questionNumber}>Câu {item.number}</Text>
+
           <View style={styles.questionHeader}>
-            <Text style={styles.questionContent}>
-              Câu {questions[currentIndex].number}: {questions[currentIndex].content}
-            </Text>
+            <Text style={styles.questionContent}>{item.content}</Text>
             <TouchableOpacity onPress={handleSaveQuestion}>
               <MaterialIcons
                 name={isSaved ? 'bookmark' : 'bookmark-border'}
@@ -166,89 +140,119 @@ const StudyScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {questions[currentIndex].imageName && (
+          {item.imageName && (
             <Image
-              source={getImageSource(questions[currentIndex].imageName, questions[currentIndex].number)}
+              source={getImageSource(item.imageName, item.number)}
               style={styles.questionImage}
             />
           )}
 
-          <View style={styles.optionsContainer}>
-            {JSON.parse(questions[currentIndex].options).map((option: string, index: number) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.option,
-                  selectedOption !== null && index === questions[currentIndex].correctAnswerIndex && styles.correctOption,
-                  selectedOption !== null && index === selectedOption && index !== questions[currentIndex].correctAnswerIndex && styles.incorrectOption,
-                ]}
-                onPress={() => handleOptionSelect(index)}
-                disabled={selectedOption !== null}
-              >
-                <Text style={styles.optionText}>{index + 1}. {option}</Text>
-              </TouchableOpacity>
-            ))}
+          <View style={{ marginTop: 10 }}>
+            {options.map((opt: string, i: number) => {
+              const isSelected = selected === i;
+              const isCorrect = i === item.correctAnswerIndex;
+
+              return (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => handleAnswerSelect(item.id, i)}
+                  disabled={selected !== undefined}
+                  style={[
+                    styles.answerButton,
+                    selected !== undefined && isCorrect && styles.correctOption,
+                    selected !== undefined && isSelected && !isCorrect && styles.incorrectOption,
+                  ]}
+                >
+                  <Text style={styles.answerText}>{i + 1}. {opt}</Text>
+                </TouchableOpacity>
+              );
+            })}
+
           </View>
 
-          {selectedOption !== null && questions[currentIndex].explain && (
+          {selected !== undefined && item.explain && (
             <View style={styles.explainContainer}>
               <Text style={styles.explainTitle}>Giải thích:</Text>
-              <Text style={styles.explainText}>{questions[currentIndex].explain}</Text>
+              <Text style={styles.explainText}>{item.explain}</Text>
             </View>
           )}
-        </Animated.ScrollView>
-      ) : (
-        <Text>Không có câu hỏi nào.</Text>
-      )}
+
+        </ScrollView>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <MaterialCommunityIcons name="arrow-left" size={28} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+
+      <Animated.FlatList
+        ref={flatListRef}
+        horizontal
+        pagingEnabled
+        data={questions}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+          useNativeDriver: false,
+        })}
+        scrollEventThrottle={16}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        showsHorizontalScrollIndicator={false}
+      />
 
       <View style={styles.navigationContainer}>
-        <View style={styles.navigationButtons}>
-          <TouchableOpacity
-            style={[styles.navButton]}
-            onPress={() => setCurrentIndex(currentIndex - 1)}
-            disabled={currentIndex === 0}
-          >
-            <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
-            <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
-            <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => {
+            if (flatListRef.current && currentIndex > 0) {
+              flatListRef.current.scrollToIndex({ index: currentIndex - 1, animated: true });
+            }
+          }}
+          disabled={currentIndex === 0}
+        >
+          <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
+          <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
+          <MaterialCommunityIcons name="chevron-left" size={30} color={currentIndex === 0 ? "#999" : "#1c84c6"} />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.navButton]}
-            onPress={() => setCurrentIndex(currentIndex + 1)}
-            disabled={currentIndex === questions.length - 1}
-          >
-            <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
-            <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
-            <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => {
+            if (flatListRef.current && currentIndex < questions.length - 1) {
+              flatListRef.current.scrollToIndex({ index: currentIndex + 1, animated: true });
+            }
+          }}
+          disabled={currentIndex === questions.length - 1}
+        >
+          <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+          <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+          <MaterialCommunityIcons name="chevron-right" size={30} color={currentIndex === questions.length - 1 ? "#999" : "#1c84c6"} />
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: "#fff" },
-  header: { flexDirection: "row", alignItems: "center" },
-  title: { fontSize: 17, fontWeight: 'bold', marginBottom: 5, textAlign: 'center' },
-  questionContainer: { flex: 1, marginBottom: 20, padding: 5, backgroundColor: 'transparent', borderRadius: 10 },
+  container: { flex: 1, backgroundColor: '#fff' },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10 },
   questionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    alignItems: 'center'
   },
   questionContent: { fontSize: 17, flex: 1, marginRight: 10, fontWeight: 'bold' },
-  optionsContainer: { marginTop: 10 },
-  option: { marginBottom: 5, padding: 10, backgroundColor: '#F4F4F4', borderRadius: 5 },
-  optionText: { fontSize: 16.5 },
-  correctOption: { backgroundColor: '#D4EDDA' },
-  incorrectOption: { backgroundColor: '#F8D7DA' },
-  navigationContainer: { justifyContent: 'flex-end', marginBottom: 10 },
-  navigationButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-  navButton: { padding: 15, borderRadius: 10, alignItems: 'center', flex: 1, marginHorizontal: 5, display: 'flex', flexDirection: 'row', justifyContent: 'center' },
-  navButtonText: { color: '#111', fontWeight: 'bold' },
+  questionNumber: { fontSize: 17 },
+  answerButton: { padding: 10, borderWidth: 1, borderColor: '#ccc', marginBottom: 10 },
+  correctOption: { backgroundColor: '#D4EDDA', borderColor: '#28a745' },
+  incorrectOption: { backgroundColor: '#F8D7DA', borderColor: '#dc3545' },
+  answerText: { fontSize: 16 },
   questionImage: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 10 },
   explainContainer: {
     marginTop: 15,
@@ -260,6 +264,18 @@ const styles = StyleSheet.create({
   },
   explainTitle: { fontWeight: 'bold', marginBottom: 5, fontSize: 16 },
   explainText: { fontSize: 15.5, lineHeight: 22 },
+  navigationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: "center",
+    backgroundColor: '#fff',
+  },
+  navButton: {
+    padding: 15,
+    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: 'space-around'
+  },
 });
 
 export default StudyScreen;

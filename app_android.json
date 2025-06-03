@@ -17,7 +17,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vn.drivertest600",
+      "bundleIdentifier": "com.thanhtung15052001.appui",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

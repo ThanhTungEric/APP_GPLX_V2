@@ -8,6 +8,7 @@ import { getCurrentLicense } from '../database/history';
 import { getLicenseIdByName } from '../database/licenses';
 import { getSavedQuestionCount } from '../database/historyquestion';
 import { getQuestionCountsByChapterAndLicense, getTotalQuestionsByLicense } from '../database/questions';
+import { getCorrectQuestionCount } from '../database/questionprogress';
 
 const Index = () => {
   const router = useRouter();
@@ -150,10 +151,10 @@ const ProgressSection = () => {
         const licenseId = await getLicenseIdByName(licenseName ?? '');
         if (!licenseId) return;
 
-        const savedCount = await getSavedQuestionCount();
+        const correctCount = await getCorrectQuestionCount(); // ⬅ thay thế tại đây
         const totalCount = await getTotalQuestionsByLicense(licenseId);
         if (totalCount > 0) {
-          setProgress(savedCount / totalCount);
+          setProgress(correctCount / totalCount);
         }
       } catch (error) {
         console.error('Lỗi khi tải tiến độ ôn tập:', error);

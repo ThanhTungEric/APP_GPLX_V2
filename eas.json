@@ -1,35 +1,24 @@
 {
   "cli": {
-    "version": ">= 3.0.0",
+    "version": ">= 16.4.1",
     "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      }
+      "channel": "preview"
     },
     "production": {
-      "channel": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production"
     }
   },
   "submit": {
-    "production": {
-      "android": {
-        "serviceAccountKeyPath": "../KeyDriverMate/pc-api-4650125399650256181-813-443275e1d771.json"
-      }
-      ,
-      "ios": {
-        "appleId": "maivanthuong306@gmail.com",
-        "ascAppId": "6505014205",
-        "appleTeamId": "87Q99J63W2"
-      }
-    }
+    "production": {}
   }
 }
